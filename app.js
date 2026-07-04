@@ -4,7 +4,7 @@ const digits = s => String(s)
   .replace(/[٠-٩]/g, d => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
   .replace(/\D/g, "");
 
-// مظنه و گرم: تا ۵ رقم ×۱۰۰۰ — دلار: تا ۳ رقم ×۱۰۰۰ — فرم کامل بدون تغییر
+// مظنه و گرم: تا ۵ رقم ×۱۰۰۰ — دلار: تا ۳ رقم  ×۱۰۰۰ — فرم کامل بدون تغییر
 function normalize(raw, kind){
   const d = digits(raw);
   if(!d) return NaN;
