@@ -197,7 +197,7 @@ function silver(){
   const x = decimals($("xag").value);
   if(!x){ $("silverOut").style.display = "none"; return; }
   const v = x * (1000 / 31.1035) * 0.999; // ۱۰۰۰ گرم ÷ گرم‌به‌انس × خلوص ۹۹۹
-  $("silverOut").style.display = "flex";
+  $("silverOut").style.display = "block";
   $("silverVal").textContent = fa1d(v) + t("dollar");
 }
 $("xag").addEventListener("input", silver);
