@@ -10,14 +10,12 @@ const decimals = s => parseFloat(String(s)
   .replace(/[٠-٩]/g, d => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
   .replace(/[^\d.]/g, ""));
 
-// مظنه و گرم: تا ۵ رقم ×۱۰۰۰ — دلار: تا ۳ رقم ×۱۰۰۰ — فرم کامل بدون تغییر
+// دلار: تا ۳ رقم ×۱۰۰۰ — فرم کامل بدون تغییر
 function normalize(raw, kind){
   const d = digits(raw);
   if(!d) return NaN;
   let n = Number(d);
-  if((kind === "mesghal" || kind === "geram") && d.length <= 5) n *= 1000;
   if(kind === "usd" && d.length <= 3) n *= 1000;
-  if(kind === "coin" && d.length <= 6) n *= 1000; // ۹۶٬۵۰۰ ← ۹۶٬۵۰۰٬۰۰۰
   return n;
 }
 
@@ -29,20 +27,18 @@ const fa1d = n => (Math.round(n * 10) / 10).toLocaleString("fa-IR", { maximumFra
 const MESGHAL_DIVISOR = 9.5742;   // انس×دلار ÷ این عدد = ذاتی مثقال
 const GRAM_PER_MESGHAL = 4.3318;  // هر مثقال = ۴٫۳۳۱۸ گرم ۱۸ عیار
 
-function bubble({ market, ons, usd, mode }){
-  let zati = ons * usd / MESGHAL_DIVISOR;
-  if(mode === "geram") zati /= GRAM_PER_MESGHAL;
-  const hobab = market - zati;
-  return { zati, hobab, pct: hobab / zati * 100 };
-}
-
-/* ── دریافت قیمت از gold-api.com — رایگان، بدون کلید، بدون سقف، با CORS ── */
+/* ── دریافت انس طلا/نقره از gold-api.com — رایگان، بدون کلید، با CORS ── */
 async function fetchPrice(symbol){ // "XAU" طلا ، "XAG" نقره
   const res = await fetch("https://api.gold-api.com/price/" + symbol,
     { signal: AbortSignal.timeout(10000) }); // حداکثر ۱۰ ثانیه انتظار، بعد خطا
   if(!res.ok) throw new Error("خطای " + res.status);
   const data = await res.json();
-  return { price: data.price, at: data.updatedAt }; // دلار به ازای هر انس + زمان به‌روزرسانی
+  const t = data.updatedAt
+    ? new Date(data.updatedAt).toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" }) : "";
+  // اگر قیمت بیش از ۴۵ دقیقه به‌روز نشده باشد، بازار جهانی بسته است
+  const closed = data.updatedAt && (Date.now() - new Date(data.updatedAt).getTime() > 45 * 60 * 1000);
+  return { price: Math.round(data.price * 10) / 10,
+           info: "منبع: gold-api" + (t ? " — ساعت " + t : "") + (closed ? " — بازارهای جهانی بسته‌اند" : "") };
 }
 
 /* ── DOM ── */
@@ -62,37 +58,24 @@ function syncThemeIcon(){
   $("themeIcon").textContent = root.dataset.theme === "dark" ? "light_mode" : "dark_mode";
 }
 
-/* ── سوییچ مظنه / گرم ── */
-let mode = "mesghal";
-const LABELS = { mesghal: "مظنه بازار تهران (تومان)", geram: "قیمت گرم ۱۸ عیار (تومان)" };
-document.querySelectorAll("#goldSeg .seg").forEach(btn => {
-  btn.addEventListener("click", () => {
-    mode = btn.dataset.mode;
-    document.querySelectorAll("#goldSeg .seg").forEach(b => b.classList.toggle("active", b === btn));
-    const f = $("gold");
-    f.label = LABELS[mode];
-    f.value = ""; f.supportingText = " "; f.error = false;
-    $("out").style.display = "none";
-  });
-});
+/* ── ثبت Service Worker برای PWA (نصب روی گوشی + آفلاین) ── */
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 
 /* ── نمایش زندهٔ مقدار خوانده‌شده + محاسبهٔ زنده ── */
-[["gold", () => mode, () => calc()],
- ["usd", () => "usd", () => calc()],
- ["coinPrice", () => "coin", () => coinCalc()],
- ["coinUsd", () => "usd", () => coinCalc()]].forEach(([id, kind, recalc]) => {
-  $(id).addEventListener("input", e => {
-    const n = normalize(e.target.value, kind());
-    e.target.supportingText = n ? "خوانده شد: " + fa(n) + " تومان" : " ";
-    e.target.error = false;
-    recalc();
-  });
+$("usd").addEventListener("input", e => {
+  const n = normalize(e.target.value, "usd");
+  e.target.supportingText = n ? "خوانده شد: " + fa(n) + " تومان" : " ";
+  e.target.error = false;
+  if(n){ // آخرین نرخ دستی را برای دفعهٔ بعد نگه دار
+    store.usd = { price: n, info: "آخرین نرخ دستی شما" };
+    try{ localStorage.setItem("hobabsanj-rates", JSON.stringify(store)); }catch(err){}
+  }
+  calc();
 });
 $("ons").addEventListener("input", e => { e.target.error = false; calc(); });
-$("coinOns").addEventListener("input", e => { e.target.error = false; coinCalc(); });
 
 /* فیلد خالی هنگام ترک: خطای قابل‌دیدن */
-["gold", "ons", "usd", "coinPrice", "coinOns", "coinUsd"].forEach(id => {
+["ons", "usd"].forEach(id => {
   $(id).addEventListener("blur", e => {
     const empty = !String(e.target.value).trim();
     e.target.error = empty;
@@ -100,59 +83,55 @@ $("coinOns").addEventListener("input", e => { e.target.error = false; coinCalc()
   });
 });
 
-/* ── محاسبهٔ زنده (بدون دکمه) ── */
+/* ── محاسبهٔ زندهٔ ارزش ذاتی — مثقال و گرم هم‌زمان ── */
 let last = null; // آخرین نتیجه برای اشتراک
 function calc(){
-  const market = normalize($("gold").value, mode);
   const ons = decimals($("ons").value);   // انس: بدون انعطاف، با حفظ اعشار
   const usd = normalize($("usd").value, "usd");
-  if(!market || !ons || !usd){ $("out").style.display = "none"; return; }
+  if(!ons || !usd){ $("out").style.display = "none"; return; }
 
-  const r = bubble({ market, ons, usd, mode });
-  last = { mode, r };
+  const mesghal = ons * usd / MESGHAL_DIVISOR;
+  const geram = mesghal / GRAM_PER_MESGHAL;
+  last = { mesghal, geram };
   $("out").style.display = "block";
-  $("zatiLabel").textContent = mode === "mesghal" ? "قیمت ذاتی مثقال" : "قیمت ذاتی گرم ۱۸ عیار";
-  $("zati").textContent = fa10k(r.zati) + " تومان";
-
-  const el = $("hobab");
-  el.className = "hobab " + (r.hobab >= 0 ? "pos" : "neg");
-  el.innerHTML = "<md-icon>" + (r.hobab >= 0 ? "trending_up" : "trending_down") + "</md-icon>" +
-                 " حباب: " + fa10k(r.hobab) + " تومان (" +
-                 r.pct.toLocaleString("fa-IR", { maximumFractionDigits: 1 }) + "٪)";
+  $("zatiMesghal").textContent = fa10k(mesghal) + " تومان";
+  $("zatiGeram").textContent = fa10k(geram) + " تومان";
 }
 /* ── اشتراک نتیجه ── */
 $("share").addEventListener("click", () => {
   if(!last) return;
-  const label = last.mode === "mesghal" ? "مثقال" : "گرم ۱۸ عیار";
-  const text = "حباب " + label + ": " + fa10k(last.r.hobab) + " تومان (" +
-    last.r.pct.toLocaleString("fa-IR", { maximumFractionDigits: 1 }) + "٪)";
+  const text = "ارزش ذاتی طلا — مثقال: " + fa10k(last.mesghal) + " تومان، گرم ۱۸ عیار: " + fa10k(last.geram) + " تومان";
   if(navigator.share) navigator.share({ text: text, url: location.href }).catch(() => {});
   else navigator.clipboard.writeText(text + " — " + location.href);
 });
 
+/* ── قرار دادن نرخ در فیلد + ذخیره برای دفعهٔ بعد و حالت آفلاین ── */
+const store = JSON.parse(localStorage.getItem("hobabsanj-rates") || "{}");
+function applyRate(fieldId, r, after){
+  $(fieldId).value = r.price;
+  $(fieldId).error = false;
+  $(fieldId).supportingText = r.info;
+  store[fieldId] = r;
+  try{ localStorage.setItem("hobabsanj-rates", JSON.stringify(store)); }catch(e){}
+  after();
+}
+
 /* ── دکمه‌های دریافت قیمت داخل فیلدها ── */
-function wireFetch(btnId, fieldId, symbol, after){
+function wireFetch(btnId, fieldId, fetcher, after){
   $(btnId).addEventListener("click", async () => {
     const icon = $(btnId).querySelector("md-icon");
     icon.textContent = "hourglass_top";
     try{
-      const { price, at } = await fetchPrice(symbol);
-      const p = Math.round(price * 10) / 10; // یک رقم اعشار
-      const t = at ? new Date(at).toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" }) : "";
-      $(fieldId).value = p;
-      $(fieldId).error = false;
-      $(fieldId).supportingText = "دریافت شد: " + fa1d(p) + " دلار" + (t ? " — ساعت " + t : "");
+      applyRate(fieldId, await fetcher(), after);
       icon.textContent = "sync";
-      after();
     }catch(err){
       icon.textContent = "sync_problem";
       $(fieldId).supportingText = "دریافت ناموفق: " + err.message;
     }
   });
 }
-wireFetch("fetchXau", "ons", "XAU", calc);
-wireFetch("fetchXag", "xag", "XAG", silver);
-wireFetch("fetchXauCoin", "coinOns", "XAU", coinCalc);
+wireFetch("fetchXau", "ons", () => fetchPrice("XAU"), calc);
+wireFetch("fetchXag", "xag", () => fetchPrice("XAG"), silver);
 
 /* ── ارزش ذاتی شمش نقره ۹۹۹ (یک کیلوگرمی) ── */
 function silver(){
@@ -164,38 +143,22 @@ function silver(){
 }
 $("xag").addEventListener("input", silver);
 
-/* ── حباب سکه (عیار ۹۰۰) ── */
-let coinWeight = 8.133; // گرم — تمام‌سکه؛ نیم ۴٫۰۶۶۵ و ربع ۲٫۰۳۳۲۵
-document.querySelectorAll("#coinSeg .seg").forEach(btn => {
-  btn.addEventListener("click", () => {
-    coinWeight = Number(btn.dataset.coin);
-    document.querySelectorAll("#coinSeg .seg").forEach(b => b.classList.toggle("active", b === btn));
-    coinCalc();
-  });
-});
-
-function coinCalc(){
-  const market = normalize($("coinPrice").value, "coin");
-  const o = decimals($("coinOns").value);
-  const d = normalize($("coinUsd").value, "usd");
-  if(!market || !o || !d){ $("coinOut").style.display = "none"; return; }
-
-  const zati = o * d / 31.1035 * coinWeight * 0.900; // نرخ گرم طلای خالص × وزن × عیار ۹۰۰
-  const hobab = market - zati;
-  $("coinOut").style.display = "block";
-  $("coinZati").textContent = fa10k(zati) + " تومان";
-  const el = $("coinHobab");
-  el.className = "hobab " + (hobab >= 0 ? "pos" : "neg");
-  el.innerHTML = "<md-icon>" + (hobab >= 0 ? "trending_up" : "trending_down") + "</md-icon>" +
-                 " حباب: " + fa10k(hobab) + " تومان (" +
-                 (hobab / zati * 100).toLocaleString("fa-IR", { maximumFractionDigits: 1 }) + "٪)";
-}
-
-/* ── منوی سه‌گانهٔ طلا / نقره / سکه — با کلیک مستقیم، مستقل از رویداد داخلی کامپوننت ── */
+/* ── منوی دوگانهٔ طلا / نقره — با کلیک مستقیم، مستقل از رویداد داخلی کامپوننت ── */
 document.querySelectorAll("#nav md-primary-tab").forEach((tab, k) => {
   tab.addEventListener("click", () => {
-    ["view-gold", "view-silver", "view-coin"].forEach((id, i) => {
+    ["view-gold", "view-silver"].forEach((id, i) => {
       $(id).hidden = i !== k;
     });
   });
 });
+
+/* ── باز شدن صفحه: اول آخرین نرخ‌های ذخیره‌شده، بعد دریافت خودکار نرخ تازه ── */
+["ons", "usd", "xag"].forEach(id => {
+  if(store[id]){
+    $(id).value = store[id].price;
+    $(id).supportingText = store[id].info + " (ذخیره‌شده)";
+  }
+});
+calc(); silver();
+fetchPrice("XAU").then(r => applyRate("ons", r, calc)).catch(() => {});
+fetchPrice("XAG").then(r => applyRate("xag", r, silver)).catch(() => {});
