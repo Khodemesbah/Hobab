@@ -1,7 +1,7 @@
 :root{
   --md-ref-typeface-plain:"Vazirmatn";
   --md-ref-typeface-brand:"Vazirmatn";
-  /* Material 3 baseline —  روشن */
+  /* Material 3 baseline — روشن */
   --md-sys-color-primary:#6750A4;
   --md-sys-color-on-primary:#FFFFFF;
   --md-sys-color-primary-container:#EADDFF;
@@ -34,7 +34,11 @@
   --ok-bg:#123F1E; --ok-fg:#A6E5AF;
 }
 
-md-icon{ font-family:"Material Symbols Rounded"; }
+md-icon{
+  font-family:"Material Symbols Rounded";
+  font-variation-settings:"FILL" 1; /* حالت توپُر */
+  overflow:hidden;
+}
 
 body{
   margin:0; padding:2rem 1rem; min-height:100vh; box-sizing:border-box;
