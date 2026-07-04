@@ -15,8 +15,6 @@
   --md-sys-color-on-error-container:#410E0B;
   --ok-bg:#C9EBCB; --ok-fg:#0B5217;
   --md-outlined-text-field-container-shape:16px;
-  --md-filled-button-container-shape:20px;
-  --md-filled-button-container-height:52px;
 }
 [data-theme="dark"]{
   /* Material 3 baseline — تاریک */
@@ -57,8 +55,8 @@ header{ display:flex; align-items:center; gap:.4rem; }
 header h1{ font-size:1.5rem; font-weight:800; margin:0; flex:1; }
 .logo{ color:var(--md-sys-color-primary); }
 .subtitle{ margin:.2rem 0 1rem; font-size:.85rem; color:var(--md-sys-color-on-surface-variant); }
-.sep{ border:0; border-top:1px solid var(--md-sys-color-outline); opacity:.4; margin:1.5rem 0 .5rem; }
-.section-title{ display:flex; align-items:center; gap:.4rem; font-size:1.05rem; font-weight:700; margin:.5rem 0 0; color:var(--md-sys-color-primary); }
+md-tabs{ margin-bottom:.75rem; }
+#coinOut{ margin-top:.5rem; }
 
 /* سوییچ مظنه / گرم */
 .segmented{
@@ -75,7 +73,7 @@ header h1{ font-size:1.5rem; font-weight:800; margin:0; flex:1; }
 }
 
 md-outlined-text-field{ display:block; margin-top:1rem; width:100%; }
-md-filled-button{ width:100%; margin-top:1.5rem; }
+#share{ margin-top:.25rem; }
 
 #out{ margin-top:1.5rem; display:none; }
 .row{ display:flex; justify-content:space-between; padding:.4rem 0;
