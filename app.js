@@ -1,164 +1,93 @@
-/* ── خواندن ورودی ── */
-const digits = s => String(s)
-  .replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))
-  .replace(/[٠-٩]/g, d => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
-  .replace(/\D/g, "");
-
-// برای انس: اعشار را حفظ می‌کند (۴۱۸۱.۳ نباید ۴۱۸۱۳ خوانده شود)
-const decimals = s => parseFloat(String(s)
-  .replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))
-  .replace(/[٠-٩]/g, d => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
-  .replace(/[^\d.]/g, ""));
-
-// دلار: تا ۳ رقم ×۱۰۰۰ — فرم کامل بدون تغییر
-function normalize(raw, kind){
-  const d = digits(raw);
-  if(!d) return NaN;
-  let n = Number(d);
-  if(kind === "usd" && d.length <= 3) n *= 1000;
-  return n;
+:root{
+  --md-ref-typeface-plain:"Vazirmatn";
+  --md-ref-typeface-brand:"Vazirmatn";
+  /* Material 3 baseline — روشن */
+  --md-sys-color-primary:#0B57D0;
+  --md-sys-color-on-primary:#FFFFFF;
+  --md-sys-color-primary-container:#D3E3FD;
+  --md-sys-color-on-primary-container:#041E49;
+  --md-sys-color-secondary-container:#DAE2F9;
+  --md-sys-color-on-secondary-container:#131C2B;
+  --md-sys-color-surface:#F9F9FF;
+  --md-sys-color-on-surface:#1A1C20;
+  --md-sys-color-surface-container:#EDEDF4;
+  --md-sys-color-on-surface-variant:#44474E;
+  --md-sys-color-outline:#74777F;
+  --md-sys-color-error-container:#F9DEDC;
+  --md-sys-color-on-error-container:#410E0B;
+  --ok-bg:#C9EBCB; --ok-fg:#0B5217;
+  --md-outlined-text-field-container-shape:16px;
+}
+[data-theme="dark"]{
+  /* Material 3 baseline — تاریک */
+  --md-sys-color-primary:#A8C7FA;
+  --md-sys-color-on-primary:#062E6F;
+  --md-sys-color-primary-container:#0842A0;
+  --md-sys-color-on-primary-container:#D3E3FD;
+  --md-sys-color-secondary-container:#3B4664;
+  --md-sys-color-on-secondary-container:#DAE2F9;
+  --md-sys-color-surface:#111318;
+  --md-sys-color-on-surface:#E2E2E9;
+  --md-sys-color-surface-container:#1D2024;
+  --md-sys-color-on-surface-variant:#C4C6D0;
+  --md-sys-color-outline:#8E9099;
+  --md-sys-color-error-container:#8C1D18;
+  --md-sys-color-on-error-container:#F9DEDC;
+  --ok-bg:#123F1E; --ok-fg:#A6E5AF;
 }
 
-const fa = n => Math.round(n).toLocaleString("fa-IR");
-const fa10k = n => (Math.round(n / 10000) * 10000).toLocaleString("fa-IR"); // نتایج تومانی: گرد به ده‌هزار تومان
-const fa1d = n => (Math.round(n * 10) / 10).toLocaleString("fa-IR", { maximumFractionDigits: 1 }); // اعداد دلاری: حداکثر یک رقم اعشار
-
-/* ── فرمول ── */
-const MESGHAL_DIVISOR = 9.5742;   // انس×دلار ÷ این عدد = ذاتی مثقال
-const GRAM_PER_MESGHAL = 4.3318;  // هر مثقال = ۴٫۳۳۱۸ گرم ۱۸ عیار
-
-/* ── دریافت انس طلا/نقره از gold-api.com — رایگان، بدون کلید، با CORS ── */
-async function fetchPrice(symbol){ // "XAU" طلا ، "XAG" نقره
-  const res = await fetch("https://api.gold-api.com/price/" + symbol,
-    { signal: AbortSignal.timeout(10000) }); // حداکثر ۱۰ ثانیه انتظار، بعد خطا
-  if(!res.ok) throw new Error("خطای " + res.status);
-  const data = await res.json();
-  const t = data.updatedAt
-    ? new Date(data.updatedAt).toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" }) : "";
-  // اگر قیمت بیش از ۴۵ دقیقه به‌روز نشده باشد، بازار جهانی بسته است
-  const closed = data.updatedAt && (Date.now() - new Date(data.updatedAt).getTime() > 45 * 60 * 1000);
-  return { price: Math.round(data.price * 10) / 10,
-           info: "منبع: gold-api" + (t ? " — ساعت " + t : "") + (closed ? " — بازارهای جهانی بسته‌اند" : "") };
+md-icon{
+  font-family:"Material Symbols Rounded";
+  font-variation-settings:"FILL" 1; /* حالت توپُر */
+  overflow:hidden;
 }
 
-/* ── DOM ── */
-const $ = id => document.getElementById(id);
-const root = document.documentElement;
+body{
+  margin:0; padding:2rem 1rem; min-height:100vh; box-sizing:border-box;
+  font-family:Vazirmatn,Tahoma,sans-serif;
+  background:var(--md-sys-color-surface);
+  color:var(--md-sys-color-on-surface);
+  display:flex; justify-content:center; align-items:flex-start;
+  transition:background .3s,color .3s;
+}
+.card{
+  background:var(--md-sys-color-surface-container);
+  width:100%; max-width:440px; border-radius:28px; padding:2rem;
+  transition:background .3s;
+}
+header{ display:flex; align-items:center; gap:.4rem; }
+header h1{ font-size:1.5rem; font-weight:800; margin:0; flex:1; }
+.logo{ color:var(--md-sys-color-primary); }
+.subtitle{ margin:.2rem 0 1rem; font-size:.85rem; color:var(--md-sys-color-on-surface-variant); }
+md-tabs{ margin-bottom:.75rem; --md-primary-tab-container-color:transparent; }
 
-/* ── پوسته ── */
-const saved = localStorage.getItem("hobyab-theme");
-root.dataset.theme = saved || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-syncThemeIcon();
-$("themeBtn").addEventListener("click", () => {
-  root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
-  localStorage.setItem("hobyab-theme", root.dataset.theme);
-  syncThemeIcon();
-});
-function syncThemeIcon(){
-  $("themeIcon").textContent = root.dataset.theme === "dark" ? "light_mode" : "dark_mode";
+/* سوییچ مظنه / گرم */
+.segmented{
+  display:flex; border:1px solid var(--md-sys-color-outline);
+  border-radius:999px; overflow:hidden; margin-bottom:.5rem;
+}
+.seg{
+  flex:1; padding:.6rem; border:0; cursor:pointer; font:inherit; font-size:.9rem;
+  background:transparent; color:var(--md-sys-color-on-surface);
+}
+.seg + .seg{ border-inline-start:1px solid var(--md-sys-color-outline); }
+.seg.active{
+  background:var(--md-sys-color-secondary-container);
+  color:var(--md-sys-color-on-secondary-container); font-weight:700;
 }
 
-/* ── ثبت Service Worker برای PWA (نصب روی گوشی + آفلاین) ── */
-if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+md-outlined-text-field{ display:block; margin-top:1rem; width:100%; }
+#share{ margin-top:.25rem; }
 
-/* ── نمایش زندهٔ مقدار خوانده‌شده + محاسبهٔ زنده ── */
-$("usd").addEventListener("input", e => {
-  const n = normalize(e.target.value, "usd");
-  e.target.supportingText = n ? "خوانده شد: " + fa(n) + " تومان" : " ";
-  e.target.error = false;
-  if(n){ // آخرین نرخ دستی را برای دفعهٔ بعد نگه دار
-    store.usd = { price: n, info: "آخرین نرخ دستی شما" };
-    try{ localStorage.setItem("hobabsanj-rates", JSON.stringify(store)); }catch(err){}
-  }
-  calc();
-});
-$("ons").addEventListener("input", e => { e.target.error = false; calc(); });
-
-/* فیلد خالی هنگام ترک: خطای قابل‌دیدن */
-["ons", "usd"].forEach(id => {
-  $(id).addEventListener("blur", e => {
-    const empty = !String(e.target.value).trim();
-    e.target.error = empty;
-    e.target.errorText = empty ? "این مقدار لازم است" : "";
-  });
-});
-
-/* ── محاسبهٔ زندهٔ ارزش ذاتی — مثقال و گرم هم‌زمان ── */
-let last = null; // آخرین نتیجه برای اشتراک
-function calc(){
-  const ons = decimals($("ons").value);   // انس: بدون انعطاف، با حفظ اعشار
-  const usd = normalize($("usd").value, "usd");
-  if(!ons || !usd){ $("out").style.display = "none"; return; }
-
-  const mesghal = ons * usd / MESGHAL_DIVISOR;
-  const geram = mesghal / GRAM_PER_MESGHAL;
-  last = { mesghal, geram };
-  $("out").style.display = "block";
-  $("zatiMesghal").textContent = fa10k(mesghal) + " تومان";
-  $("zatiGeram").textContent = fa10k(geram) + " تومان";
+#out{ margin-top:1.5rem; display:none; }
+.row{ display:flex; justify-content:space-between; padding:.4rem 0;
+      color:var(--md-sys-color-on-surface-variant); }
+.result{
+  margin-top:.75rem; padding:1rem 1.25rem; border-radius:20px;
+  display:flex; align-items:center; gap:.6rem;
+  font-size:1.15rem; font-weight:700;
+  background:var(--md-sys-color-primary-container);
+  color:var(--md-sys-color-on-primary-container);
+  animation:pop .45s cubic-bezier(.2,1.6,.4,1);
 }
-/* ── اشتراک نتیجه ── */
-$("share").addEventListener("click", () => {
-  if(!last) return;
-  const text = "ارزش ذاتی طلا — مثقال: " + fa10k(last.mesghal) + " تومان، گرم ۱۸ عیار: " + fa10k(last.geram) + " تومان";
-  if(navigator.share) navigator.share({ text: text, url: location.href }).catch(() => {});
-  else navigator.clipboard.writeText(text + " — " + location.href);
-});
-
-/* ── قرار دادن نرخ در فیلد + ذخیره برای دفعهٔ بعد و حالت آفلاین ── */
-const store = JSON.parse(localStorage.getItem("hobabsanj-rates") || "{}");
-function applyRate(fieldId, r, after){
-  $(fieldId).value = r.price;
-  $(fieldId).error = false;
-  $(fieldId).supportingText = r.info;
-  store[fieldId] = r;
-  try{ localStorage.setItem("hobabsanj-rates", JSON.stringify(store)); }catch(e){}
-  after();
-}
-
-/* ── دکمه‌های دریافت قیمت داخل فیلدها ── */
-function wireFetch(btnId, fieldId, fetcher, after){
-  $(btnId).addEventListener("click", async () => {
-    const icon = $(btnId).querySelector("md-icon");
-    icon.textContent = "hourglass_top";
-    try{
-      applyRate(fieldId, await fetcher(), after);
-      icon.textContent = "sync";
-    }catch(err){
-      icon.textContent = "sync_problem";
-      $(fieldId).supportingText = "دریافت ناموفق: " + err.message;
-    }
-  });
-}
-wireFetch("fetchXau", "ons", () => fetchPrice("XAU"), calc);
-wireFetch("fetchXag", "xag", () => fetchPrice("XAG"), silver);
-
-/* ── ارزش ذاتی شمش نقره ۹۹۹ (یک کیلوگرمی) ── */
-function silver(){
-  const x = decimals($("xag").value);
-  if(!x){ $("silverOut").style.display = "none"; return; }
-  const v = x * (1000 / 31.1035) * 0.999; // ۱۰۰۰ گرم ÷ گرم‌به‌انس × خلوص ۹۹۹
-  $("silverOut").style.display = "flex";
-  $("silverVal").textContent = fa1d(v) + " دلار";
-}
-$("xag").addEventListener("input", silver);
-
-/* ── منوی دوگانهٔ طلا / نقره — با کلیک مستقیم، مستقل از رویداد داخلی کامپوننت ── */
-document.querySelectorAll("#nav md-primary-tab").forEach((tab, k) => {
-  tab.addEventListener("click", () => {
-    ["view-gold", "view-silver"].forEach((id, i) => {
-      $(id).hidden = i !== k;
-    });
-  });
-});
-
-/* ── باز شدن صفحه: اول آخرین نرخ‌های ذخیره‌شده، بعد دریافت خودکار نرخ تازه ── */
-["ons", "usd", "xag"].forEach(id => {
-  if(store[id]){
-    $(id).value = store[id].price;
-    $(id).supportingText = store[id].info + " (ذخیره‌شده)";
-  }
-});
-calc(); silver();
-fetchPrice("XAU").then(r => applyRate("ons", r, calc)).catch(() => {});
-fetchPrice("XAG").then(r => applyRate("xag", r, silver)).catch(() => {});
+@keyframes pop{ from{ transform:scale(.85); opacity:0 } to{ transform:scale(1); opacity:1 } }
