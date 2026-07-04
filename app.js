@@ -20,7 +20,7 @@ function normalize(raw, kind){
 }
 
 /* ── زبان و نسخه ── */
-const APP_VERSION = "0.9"; // نسخه‌های زیر ۱ برچسب Beta می‌گیرند
+const APP_VERSION = "0.9.3"; // نسخه‌های زیر ۱ برچسب Beta می‌گیرند
 let lang = localStorage.getItem("hobab-lang") || "fa";
 const T = {
   fa: {
@@ -41,6 +41,7 @@ const T = {
     source: "منبع: gold-api", atHour: " — ساعت ", closedTag: " — بازارهای جهانی بسته‌اند",
     saved: " (ذخیره‌شده)", manual: "آخرین نرخ دستی شما",
     required: "این مقدار لازم است",
+    marketError: "دریافت دادهٔ بازار ناموفق بود — تلاش مجدد",
     locale: "fa-IR", dir: "rtl"
   },
   en: {
@@ -61,6 +62,7 @@ const T = {
     source: "Source: gold-api", atHour: " — at ", closedTag: " — global markets closed",
     saved: " (saved)", manual: "Your last manual rate",
     required: "This value is required",
+    marketError: "Couldn't fetch market data — retry",
     locale: "en-US", dir: "ltr"
   }
 };
@@ -169,7 +171,7 @@ const infoText = r => r.manual ? t("manual")
 function applyRate(fieldId, r, after){
   $(fieldId).value = r.price;
   $(fieldId).error = false;
-  $(fieldId).supportingText = infoText(r);
+  $(fieldId).supportingText = " "; // زمان و منبع در کارت وضعیت بازار نمایش داده می‌شود
   store[fieldId] = r;
   try{ localStorage.setItem("hobabsanj-rates", JSON.stringify(store)); }catch(e){}
   after();
@@ -206,6 +208,7 @@ $("xag").addEventListener("input", silver);
 function updateMarketCard(){
   const xau = marketState.XAU, xag = marketState.XAG;
   if(!xau && !xag) return;
+  $("marketRetry").style.display = "none"; // داده رسید؛ حالت خطا پاک
   const closed = (xau && xau.closed) || (xag && xag.closed);
   $("marketCard").className = "market " + (closed ? "closed" : "open");
   $("marketIcon").textContent = closed ? "bedtime" : "radio_button_checked";
@@ -244,7 +247,7 @@ function applyLang(){
   $("shareLabel").textContent = t("share");
   if(!marketState.XAU && !marketState.XAG) $("marketLabel").textContent = t("waiting");
   updateMarketCard();
-  ["ons", "usd", "xag"].forEach(id => { if(store[id] && $(id).value) $(id).supportingText = infoText(store[id]); });
+  if(store.usd && $("usd").value) $("usd").supportingText = infoText(store.usd);
   calc(); silver();
 }
 $("langBtn").addEventListener("click", () => {
@@ -257,18 +260,32 @@ $("langBtn").addEventListener("click", () => {
 ["ons", "usd", "xag"].forEach(id => {
   if(store[id]){
     $(id).value = store[id].price;
-    $(id).supportingText = infoText(store[id]) + t("saved");
+    $(id).supportingText = id === "usd" ? infoText(store[id]) + t("saved") : " ";
   }
 });
 applyLang();
 try{ localStorage.removeItem("hobab-trend"); }catch(e){} // پاک‌سازی دادهٔ نمودار حذف‌شده
 
-/* دریافت خودکار انس طلا و نقره در باز شدن صفحه — بدون نیاز به دکمه */
-[["ons", "XAU", calc], ["xag", "XAG", silver]].forEach(([fieldId, symbol, after]) => {
-  if(!$(fieldId).value) $(fieldId).supportingText = t("fetching");
-  fetchPrice(symbol)
-    .then(r => applyRate(fieldId, r, after))
-    .catch(err => {
-      if(!$(fieldId).value) $(fieldId).supportingText = t("failed") + err.message + t("autoFailedHint");
-    });
-});
+/* دریافت خودکار انس طلا و نقره — با حالت خطا و تلاش مجدد روی کارت بازار */
+function marketError(){
+  if(marketState.XAU || marketState.XAG) return; // دست‌کم یک دادهٔ معتبر داریم
+  $("marketCard").className = "market closed";
+  $("marketIcon").textContent = "error";
+  $("marketLabel").textContent = t("marketError");
+  $("marketTimes").textContent = "";
+  $("marketRetry").style.display = "inline-flex";
+}
+
+function autoFetch(){
+  [["ons", "XAU", calc], ["xag", "XAG", silver]].forEach(([fieldId, symbol, after]) => {
+    if(!$(fieldId).value) $(fieldId).supportingText = t("fetching");
+    fetchPrice(symbol)
+      .then(r => applyRate(fieldId, r, after))
+      .catch(err => {
+        if(!$(fieldId).value) $(fieldId).supportingText = t("failed") + err.message + t("autoFailedHint");
+        marketError();
+      });
+  });
+}
+$("marketRetry").addEventListener("click", autoFetch);
+autoFetch();
