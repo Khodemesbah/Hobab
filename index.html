@@ -10,14 +10,14 @@
   <!-- آیکون‌ها از jsDelivr — دامنهٔ fonts.googleapis.com از ایران بدون فیلترشکن باز نمی‌شود -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/material-symbols@latest/rounded.css">
   <!-- با هر آپدیت، عدد v را یک واحد بالا ببر تا مرورگر کاربر نسخهٔ جدید را بدون پاک کردن کش بگیرد -->
-  <link rel="stylesheet" href="styles.css?v=0.8.4">
+  <link rel="stylesheet" href="styles.css?v=0.8.5">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <meta name="theme-color" content="#0B57D0">
 
   <!-- ایمپورت مستقیم باندل‌شده؛ بدون importmap تا در وب‌ویوهای قدیمی هم کار کند -->
   <script type="module" src="https://esm.run/@material/web/all.js"></script>
-  <script type="module" src="app.js?v=0.8.4"></script>
+  <script type="module" src="app.js?v=0.8.5"></script>
 </head>
 <body>
   <main class="card">
@@ -68,7 +68,7 @@
 
     <!-- روند انس طلا — از نمونه‌های ثبت‌شده در همین دستگاه -->
     <section id="trend" style="display:none">
-      <div class="trend-head"><span>روند انس طلا (نمونه‌های این دستگاه)</span><b id="trendDelta"></b></div>
+      <div class="trend-head"><span id="trendLabel">روند انس طلا (نمونه‌های این دستگاه)</span><b id="trendDelta"></b></div>
       <svg id="spark" viewBox="0 0 300 60" preserveAspectRatio="none"></svg>
     </section>
 
