@@ -29,6 +29,13 @@ const GRAM_PER_MESGHAL = 4.3318;  // هر مثقال = ۴٫۳۳۱۸ گرم ۱۸ 
 
 /* ── دریافت انس طلا/نقره از gold-api.com — رایگان، بدون کلید، با CORS ── */
 const marketState = {}; // وضعیت هر نماد برای کارت بازار
+
+// بازار جهانی طلا از جمعه ≈۲۲ UTC تا یکشنبه ≈۲۲ UTC بسته است
+function marketClosedNow(){
+  const now = new Date();
+  const d = now.getUTCDay(), h = now.getUTCHours(); // 0=یکشنبه … 6=شنبه
+  return d === 6 || (d === 5 && h >= 22) || (d === 0 && h < 22);
+}
 async function fetchPrice(symbol){ // "XAU" طلا ، "XAG" نقره
   const res = await fetch("https://api.gold-api.com/price/" + symbol,
     { signal: AbortSignal.timeout(10000) }); // حداکثر ۱۰ ثانیه انتظار، بعد خطا
@@ -36,8 +43,9 @@ async function fetchPrice(symbol){ // "XAU" طلا ، "XAG" نقره
   const data = await res.json();
   const t = data.updatedAt
     ? new Date(data.updatedAt).toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" }) : "";
-  // اگر قیمت بیش از ۴۵ دقیقه به‌روز نشده باشد، بازار جهانی بسته است
-  const closed = data.updatedAt && (Date.now() - new Date(data.updatedAt).getTime() > 45 * 60 * 1000);
+  // بسته بودن بازار: تقویم آخر هفته (قطعی) یا کهنگی دادهٔ منبع (پشتیبان)
+  const stale = data.updatedAt && (Date.now() - new Date(data.updatedAt).getTime() > 45 * 60 * 1000);
+  const closed = marketClosedNow() || stale;
   marketState[symbol] = { closed: !!closed, t };
   updateMarketCard();
   if(symbol === "XAU") addTrendSample(data.price); // نمونه برای نمودار روند
@@ -179,7 +187,16 @@ function drawTrend(arr){
   if(!arr){
     try{ arr = JSON.parse(localStorage.getItem(TREND_KEY) || "[]"); }catch(e){ arr = []; }
   }
-  if(arr.length < 2){ $("trend").style.display = "none"; return; } // با یک نقطه روندی وجود ندارد
+  if(arr.length === 0){ $("trend").style.display = "none"; return; }
+  if(arr.length < 2){ // با یک نقطه هنوز خطی نیست؛ ولی وضعیت را نشان بده
+    $("trend").style.display = "block";
+    $("spark").style.display = "none";
+    $("trendDelta").textContent = "";
+    $("trendLabel").textContent = "نمونهٔ اول انس ثبت شد — نمودار از بازدیدهای بعدی شکل می‌گیرد";
+    return;
+  }
+  $("trendLabel").textContent = "روند انس طلا (نمونه‌های این دستگاه)";
+  $("spark").style.display = "block";
   const ps = arr.map(s => s.p);
   const min = Math.min.apply(null, ps), max = Math.max.apply(null, ps);
   const span = (max - min) || 1;
