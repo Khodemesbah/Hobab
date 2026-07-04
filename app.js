@@ -27,10 +27,12 @@ function bubble({ market, ons, usd, mode }){
   return { zati, hobab, pct: hobab / zati * 100 };
 }
 
-/* ── لایهٔ اتصال API — بعداً با fetch واقعی جایگزین شود
-   قرارداد خروجی: { mesghal, geram, ons, usd } با مقادیر کامل (بدون عبور از normalize) */
-async function fetchRates(){
-  throw new Error("API هنوز متصل نیست");
+/* ── دریافت انس جهانی از gold-api.com — رایگان، بدون کلید، بدون سقف درخواست، با CORS ── */
+async function fetchOns(){
+  const res = await fetch("https://api.gold-api.com/price/XAU");
+  if(!res.ok) throw new Error("خطای " + res.status);
+  const data = await res.json();
+  return data.price; // دلار به ازای هر انس
 }
 
 /* ── DOM ── */
@@ -92,15 +94,18 @@ function calc(){
 }
 $("calcBtn").addEventListener("click", calc);
 
-/* ── API ── */
+/* ── دکمهٔ دریافت انس ── */
 $("sync").addEventListener("click", async () => {
+  const icon = $("sync").querySelector("md-icon");
+  icon.textContent = "hourglass_top";
   try{
-    const r = await fetchRates();
-    $("gold").value = mode === "mesghal" ? r.mesghal : r.geram;
-    $("ons").value = r.ons;
-    $("usd").value = r.usd;
-    calc();
+    const p = await fetchOns();
+    $("ons").value = Math.round(p);
+    $("ons").supportingText = "دریافت شد: " + fa(p) + " دلار";
+    icon.textContent = "sync";
+    calc(); // اگر دو فیلد دیگر پر باشند، حباب هم همان لحظه به‌روز می‌شود
   }catch(err){
-    $("sync").title = err.message;
+    icon.textContent = "sync_problem";
+    $("ons").supportingText = "دریافت انس ناموفق: " + err.message;
   }
 });
