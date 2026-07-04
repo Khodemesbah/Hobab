@@ -1,6 +1,6 @@
 /* با هر انتشار، نام کش را همراه ?v= عوض کن تا نسخهٔ جدید جایگزین شود */
-const CACHE = "hobabsanj-v0.8.1";
-const ASSETS = ["./", "./index.html", "./styles.css?v=0.8.1", "./app.js?v=0.8.1", "./manifest.json", "./icon.svg"];
+const CACHE = "hobab-v0.8.3";
+const ASSETS = ["./", "./index.html", "./styles.css?v=0.8.3", "./app.js?v=0.8.3", "./manifest.json", "./icon.svg"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
@@ -15,5 +15,19 @@ self.addEventListener("activate", e => {
 self.addEventListener("fetch", e => {
   if(e.request.method !== "GET") return;
   if(new URL(e.request.url).origin !== self.location.origin) return; // API و CDN همیشه از شبکه
+
+  /* HTML: اول شبکه، تا آپدیت‌ها همیشه فوری برسند؛ کش فقط برای حالت آفلاین */
+  if(e.request.mode === "navigate"){
+    e.respondWith(
+      fetch(e.request).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, copy));
+        return res;
+      }).catch(() => caches.match(e.request).then(hit => hit || caches.match("./")))
+    );
+    return;
+  }
+
+  /* بقیهٔ فایل‌ها نسخه‌دارند (?v=)؛ کش‌شان امن است */
   e.respondWith(caches.match(e.request).then(hit => hit || fetch(e.request)));
 });
