@@ -2,15 +2,15 @@
   --md-ref-typeface-plain:"Vazirmatn";
   --md-ref-typeface-brand:"Vazirmatn";
   /* Material 3 baseline — روشن */
-  --md-sys-color-primary:#6750A4;
+  --md-sys-color-primary:#0B57D0;
   --md-sys-color-on-primary:#FFFFFF;
-  --md-sys-color-primary-container:#EADDFF;
-  --md-sys-color-on-primary-container:#21005D;
-  --md-sys-color-surface:#FEF7FF;
-  --md-sys-color-on-surface:#1D1B20;
-  --md-sys-color-surface-container:#F3EDF7;
-  --md-sys-color-on-surface-variant:#49454F;
-  --md-sys-color-outline:#79747E;
+  --md-sys-color-primary-container:#D3E3FD;
+  --md-sys-color-on-primary-container:#041E49;
+  --md-sys-color-surface:#F9F9FF;
+  --md-sys-color-on-surface:#1A1C20;
+  --md-sys-color-surface-container:#EDEDF4;
+  --md-sys-color-on-surface-variant:#44474E;
+  --md-sys-color-outline:#74777F;
   --md-sys-color-error-container:#F9DEDC;
   --md-sys-color-on-error-container:#410E0B;
   --ok-bg:#C9EBCB; --ok-fg:#0B5217;
@@ -20,15 +20,15 @@
 }
 [data-theme="dark"]{
   /* Material 3 baseline — تاریک */
-  --md-sys-color-primary:#D0BCFF;
-  --md-sys-color-on-primary:#381E72;
-  --md-sys-color-primary-container:#4F378B;
-  --md-sys-color-on-primary-container:#EADDFF;
-  --md-sys-color-surface:#141218;
-  --md-sys-color-on-surface:#E6E0E9;
-  --md-sys-color-surface-container:#211F26;
-  --md-sys-color-on-surface-variant:#CAC4D0;
-  --md-sys-color-outline:#938F99;
+  --md-sys-color-primary:#A8C7FA;
+  --md-sys-color-on-primary:#062E6F;
+  --md-sys-color-primary-container:#0842A0;
+  --md-sys-color-on-primary-container:#D3E3FD;
+  --md-sys-color-surface:#111318;
+  --md-sys-color-on-surface:#E2E2E9;
+  --md-sys-color-surface-container:#1D2024;
+  --md-sys-color-on-surface-variant:#C4C6D0;
+  --md-sys-color-outline:#8E9099;
   --md-sys-color-error-container:#8C1D18;
   --md-sys-color-on-error-container:#F9DEDC;
   --ok-bg:#123F1E; --ok-fg:#A6E5AF;
@@ -57,6 +57,8 @@ header{ display:flex; align-items:center; gap:.4rem; }
 header h1{ font-size:1.5rem; font-weight:800; margin:0; flex:1; }
 .logo{ color:var(--md-sys-color-primary); }
 .subtitle{ margin:.2rem 0 1rem; font-size:.85rem; color:var(--md-sys-color-on-surface-variant); }
+.sep{ border:0; border-top:1px solid var(--md-sys-color-outline); opacity:.4; margin:1.5rem 0 .5rem; }
+.section-title{ display:flex; align-items:center; gap:.4rem; font-size:1.05rem; font-weight:700; margin:.5rem 0 0; color:var(--md-sys-color-primary); }
 
 /* سوییچ مظنه / گرم */
 .segmented{
