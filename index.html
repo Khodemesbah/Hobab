@@ -10,11 +10,11 @@
   <!-- آیکون‌ها از jsDelivr — دامنهٔ fonts.googleapis.com از ایران بدون فیلترشکن باز نمی‌شود -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/material-symbols@latest/rounded.css">
   <!-- با هر آپدیت، عدد v را یک واحد بالا ببر تا مرورگر کاربر نسخهٔ جدید را بدون پاک کردن کش بگیرد -->
-  <link rel="stylesheet" href="styles.css?v=5.1">
+  <link rel="stylesheet" href="styles.css?v=6">
 
   <!-- ایمپورت مستقیم باندل‌شده؛ بدون importmap تا در وب‌ویوهای قدیمی هم کار کند -->
   <script type="module" src="https://esm.run/@material/web/all.js"></script>
-  <script type="module" src="app.js?v=5.1"></script>
+  <script type="module" src="app.js?v=6"></script>
 </head>
 <body>
   <main class="card">
@@ -25,7 +25,15 @@
     </header>
     <p class="subtitle">محاسبه‌گر حباب طلا و سکه</p>
 
-    <div class="segmented">
+    <md-tabs id="nav">
+      <md-primary-tab inline-icon><md-icon slot="icon">paid</md-icon>طلا</md-primary-tab>
+      <md-primary-tab inline-icon><md-icon slot="icon">diamond</md-icon>نقره</md-primary-tab>
+      <md-primary-tab inline-icon><md-icon slot="icon">monetization_on</md-icon>سکه</md-primary-tab>
+    </md-tabs>
+
+    <section id="view-gold">
+
+    <div class="segmented" id="goldSeg">
       <button type="button" class="seg active" data-mode="mesghal">مظنه (مثقال)</button>
       <button type="button" class="seg" data-mode="geram">گرم ۱۸ عیار</button>
     </div>
@@ -43,16 +51,15 @@
       <md-icon slot="leading-icon">attach_money</md-icon>
     </md-outlined-text-field>
 
-    <md-filled-button id="calcBtn"><md-icon slot="icon">calculate</md-icon>محاسبهٔ حباب</md-filled-button>
-
     <section id="out">
       <div class="row"><span id="zatiLabel"></span><b id="zati"></b></div>
       <div id="hobab" class="hobab"></div>
+      <md-text-button id="share"><md-icon slot="icon">share</md-icon>اشتراک نتیجه</md-text-button>
     </section>
 
-    <hr class="sep">
+    </section>
 
-    <h2 class="section-title"><md-icon>diamond</md-icon> شمش نقره ۹۹۹</h2>
+    <section id="view-silver" hidden>
 
     <md-outlined-text-field id="xag" label="انس جهانی نقره (دلار)" inputmode="numeric" supporting-text=" ">
       <md-icon slot="leading-icon">public</md-icon>
@@ -60,6 +67,36 @@
     </md-outlined-text-field>
 
     <div id="silverOut" class="row" style="display:none"><span>ارزش ذاتی شمش یک‌کیلویی ۹۹۹</span><b id="silverVal"></b></div>
+
+    </section>
+
+    <section id="view-coin" hidden>
+
+    <div class="segmented" id="coinSeg">
+      <button type="button" class="seg active" data-coin="8.133">تمام</button>
+      <button type="button" class="seg" data-coin="4.0665">نیم</button>
+      <button type="button" class="seg" data-coin="2.03325">ربع</button>
+    </div>
+
+    <md-outlined-text-field id="coinPrice" label="قیمت بازار سکه (تومان)" inputmode="numeric" supporting-text=" ">
+      <md-icon slot="leading-icon">monetization_on</md-icon>
+    </md-outlined-text-field>
+
+    <md-outlined-text-field id="coinOns" label="انس جهانی طلا (دلار)" inputmode="numeric" supporting-text=" ">
+      <md-icon slot="leading-icon">public</md-icon>
+      <md-icon-button id="fetchXauCoin" slot="trailing-icon" title="دریافت از API"><md-icon>sync</md-icon></md-icon-button>
+    </md-outlined-text-field>
+
+    <md-outlined-text-field id="coinUsd" label="قیمت دلار (تومان)" inputmode="numeric" supporting-text=" ">
+      <md-icon slot="leading-icon">attach_money</md-icon>
+    </md-outlined-text-field>
+
+    <section id="coinOut" style="display:none">
+      <div class="row"><span>قیمت ذاتی سکه</span><b id="coinZati"></b></div>
+      <div id="coinHobab" class="hobab"></div>
+    </section>
+
+    </section>
   </main>
 </body>
 </html>
