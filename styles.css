@@ -37,9 +37,7 @@
   --md-sys-color-surface-container:#EEECF7;
   --md-sys-color-on-surface-variant:#46464F;
   --md-sys-color-outline:#777680;
-  --md-sys-color-error-container:#F9DEDC;
-  --md-sys-color-on-error-container:#410E0B;
-  --ok-bg:#C9EBCB; --ok-fg:#0B5217;
+  --ok-fg:#0B5217; /* سبز وضعیت فعال بازار — رنگ گسترش‌یافتهٔ مجاز M3 */
   --md-outlined-text-field-container-shape:16px;
 }
 [data-theme="dark"]{
@@ -56,9 +54,7 @@
   --md-sys-color-surface-container:#23252F; /* زمینهٔ سواچ گوشی */
   --md-sys-color-on-surface-variant:#C8C5D4;
   --md-sys-color-outline:#918F9E;
-  --md-sys-color-error-container:#8C1D18;
-  --md-sys-color-on-error-container:#F9DEDC;
-  --ok-bg:#123F1E; --ok-fg:#A6E5AF;
+  --ok-fg:#A6E5AF;
 }
 
 md-icon{
@@ -121,9 +117,6 @@ md-outlined-text-field{
 }
 
 #out{ margin-top:1rem; display:none; }
-.row{ display:flex; justify-content:space-between; padding:.4rem 0;
-      color:var(--md-sys-color-on-surface-variant); }
-
 /* کارت نتیجه — تونال روی primary-container، مطابق M3 */
 .result-card{
   background:var(--md-sys-color-primary-container);
