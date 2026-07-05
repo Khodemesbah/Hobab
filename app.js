@@ -20,7 +20,7 @@ function normalize(raw, kind){
 }
 
 /* ── زبان و نسخه ── */
-const APP_VERSION = "0.9.5.2"; // نسخه‌های زیر ۱ برچسب Beta می‌گیرند
+const APP_VERSION = "0.9.6"; // نسخه‌های زیر ۱ برچسب Beta می‌گیرند
 let lang = localStorage.getItem("hobab-lang") || "fa";
 const T = {
   fa: {
