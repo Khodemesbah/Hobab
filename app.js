@@ -20,7 +20,7 @@ function normalize(raw, kind){
 }
 
 /* ── زبان و نسخه ── */
-const APP_VERSION = "0.9.8.4"; // نسخه‌های زیر ۱ برچسب بتا/Beta می‌گیرند
+const APP_VERSION = "0.9.9.1"; // تنها جای تعریف نسخه — sw.js آن را از ?v= آدرس ثبت خودش می‌خواند
 let lang = localStorage.getItem("hobab-lang") || "fa";
 const T = {
   fa: {
@@ -37,7 +37,7 @@ const T = {
     fetching: "در حال دریافت خودکار…",
     failed: "دریافت ناموفق: ", autoFailedHint: " — دکمهٔ کنار فیلد را بزن",
     source: "منبع: gold-api", atHour: " — ساعت ", closedTag: " — بازارهای جهانی بسته‌اند",
-    required: "این مقدار لازم است",
+    required: "این مقدار لازم است", copied: "کپی شد ✓",
     marketError: "دریافت دادهٔ بازار ناموفق بود — تلاش مجدد",
     locale: "fa-IR", dir: "rtl"
   },
@@ -55,7 +55,7 @@ const T = {
     fetching: "Fetching automatically…",
     failed: "Fetch failed: ", autoFailedHint: " — use the sync button",
     source: "Source: gold-api", atHour: " — at ", closedTag: " — global markets closed",
-    required: "This value is required",
+    required: "This value is required", copied: "Copied ✓",
     marketError: "Couldn't fetch market data — retry",
     locale: "en-US", dir: "ltr"
   }
@@ -74,6 +74,7 @@ const GRAM_PER_MESGHAL = 4.3318;  // هر مثقال = ۴٫۳۳۱۸ گرم ۱۸ 
 
 /* ── دریافت انس طلا/نقره از gold-api.com — رایگان، بدون کلید، با CORS ── */
 const marketState = {}; // وضعیت هر نماد برای کارت بازار
+let lastFetchAt = 0; // زمان آخرین دریافت موفق — مبنای رفرش خودکار هنگام برگشت به اپ
 
 // ماه هلالی با برق چهارپر — هم‌خانوادهٔ آیکون‌های اختصاصی تب‌ها، وفادار به متریال ۳
 const MOON_SVG = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12.6 21a9 9 0 0 1-8.55-11.8A9 9 0 0 1 11 3.1c.5-.06.8.5.52.9a7.2 7.2 0 0 0 9.4 10.4c.44-.23.98.1.9.6A9 9 0 0 1 12.6 21Z"/><path d="M17.5 3l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2Z"/></svg>';
@@ -96,6 +97,7 @@ async function fetchPrice(symbol){ // "XAU" طلا ، "XAG" نقره
   const closed = marketClosedNow() || stale;
   marketState[symbol] = { closed: !!closed, t: tm, at: data.updatedAt }; // زمان خام هم می‌ماند تا با تعویض زبان دوباره فرمت شود
   try{ updateMarketCard(); }catch(e){} // خطای UI کارت نباید دریافت قیمت را ناموفق جلوه دهد
+  lastFetchAt = Date.now();
   return { price: Math.round(data.price * 10) / 10, tm: tm, closed: !!closed };
 }
 
@@ -120,7 +122,8 @@ function syncThemeIcon(){
 }
 
 /* ── ثبت Service Worker برای PWA (نصب روی گوشی + آفلاین) ── */
-if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+if("serviceWorker" in navigator) // تغییر ?v= یعنی اسکریپت ورکر جدید — مرورگر خودش نسخهٔ جدید را نصب می‌کند
+  navigator.serviceWorker.register("sw.js?v=" + APP_VERSION, { updateViaCache: "none" }).catch(() => {});
 
 /* ── نمایش زندهٔ مقدار خوانده‌شده + محاسبهٔ زنده ── */
 $("usd").addEventListener("input", e => {
@@ -168,12 +171,13 @@ function applyRate(fieldId, r, after){
   after();
 }
 
-/* ── دکمه‌های دریافت قیمت — رفرش در هر تب، هر دو فلز را هم‌زمان به‌روز می‌کند ── */
+/* ── دکمه‌های دریافت قیمت — رفرش در هر تب، هر دو فلز را به‌روز می‌کند ── */
 const iconTimers = {}; // تایمر برگشت تیک به آیکون رفرش، برای هر دکمه
+const FETCH_MAP = { fetchXau: ["ons", "XAU", calc], fetchXag: ["xag", "XAG", silver] };
 function setBtnIcon(btnId, name){
   const icon = $(btnId).querySelector("md-icon");
   clearTimeout(iconTimers[btnId]);
-  icon.classList.remove("spin");
+  icon.classList.remove("spin"); // تیک و خطا همیشه ثابت‌اند — هیچ‌وقت نمی‌چرخند
   icon.textContent = name;
   if(name === "check") // تیک متریال ۲۰ ثانیه می‌ماند، بعد دوباره آیکون رفرش
     iconTimers[btnId] = setTimeout(() => { icon.textContent = "sync"; }, 20000);
@@ -181,16 +185,24 @@ function setBtnIcon(btnId, name){
 async function refreshBoth(btnId){ // کلیک روی تیک هم دوباره به‌روزرسانی می‌کند
   const icon = $(btnId).querySelector("md-icon");
   clearTimeout(iconTimers[btnId]);
-  icon.textContent = "sync"; // خود آیکون رفرش می‌چرخد — ساعت شنی حذف شد
+  icon.textContent = "sync";
   icon.classList.add("spin");
-  const jobs = [["ons", "XAU", calc], ["xag", "XAG", silver]].map(([fieldId, symbol, after]) =>
-    fetchPrice(symbol)
-      .then(r => applyRate(fieldId, r, after))
-      .catch(err => { $(fieldId).supportingText = t("failed") + err.message; throw err; })
-  );
-  const results = await Promise.allSettled(jobs);
-  const failed = results.some(r => r.status === "rejected");
-  setBtnIcon(btnId, failed ? "sync_problem" : "check");
+  // فلز تبِ دیگر در پس‌زمینه به‌روز می‌شود و آیکون را معطل نمی‌کند —
+  // ریشهٔ چرخش طولانی، انتظار برای کُندترین درخواست (تا مهلت ۱۰ ثانیه) بود
+  const otherBtn = btnId === "fetchXau" ? "fetchXag" : "fetchXau";
+  const [oField, oSymbol, oAfter] = FETCH_MAP[otherBtn];
+  fetchPrice(oSymbol)
+    .then(r => applyRate(oField, r, oAfter))
+    .catch(err => { $(oField).supportingText = t("failed") + err.message; });
+  // آیکون فقط تابع فلز همین تب است: به محض رسیدن قیمت، تیک ثابت
+  const [field, symbol, after] = FETCH_MAP[btnId];
+  try{
+    applyRate(field, await fetchPrice(symbol), after);
+    setBtnIcon(btnId, "check");
+  }catch(err){
+    $(field).supportingText = t("failed") + err.message;
+    setBtnIcon(btnId, "sync_problem");
+  }
 }
 $("fetchXau").addEventListener("click", () => refreshBoth("fetchXau"));
 $("fetchXag").addEventListener("click", () => refreshBoth("fetchXag"));
@@ -311,3 +323,20 @@ function autoFetch(){
 }
 $("marketRetry").addEventListener("click", autoFetch);
 autoFetch();
+
+/* ── رفرش خودکار هوشمند: برگشت به اپ بعد از ۵+ دقیقه غیبت → دریافت بی‌صدا ── */
+document.addEventListener("visibilitychange", () => {
+  if(document.visibilityState === "visible" && Date.now() - lastFetchAt > 5 * 60 * 1000) autoFetch();
+});
+
+/* ── کپی با لمس: لمس کارت نتیجه، عدد اصلی را در کلیپ‌بورد می‌گذارد ── */
+function copyValue(valueId, labelId, labelKey){
+  const txt = $(valueId).textContent.trim();
+  if(!txt || !navigator.clipboard) return;
+  navigator.clipboard.writeText(txt).then(() => {
+    $(labelId).textContent = t("copied"); // بازخورد کوتاه روی سرصفحهٔ کارت
+    setTimeout(() => { $(labelId).textContent = t(labelKey); }, 1200);
+  }).catch(() => {});
+}
+$("out").addEventListener("click", () => copyValue("zatiMesghal", "rowMesghalLabel", "rowMesghal"));
+$("silverOut").addEventListener("click", () => copyValue("silverVal", "silverRowLabel", "silverRow"));
