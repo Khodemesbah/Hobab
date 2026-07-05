@@ -20,7 +20,7 @@ function normalize(raw, kind){
 }
 
 /* ── زبان و نسخه ── */
-const APP_VERSION = "0.9.9.6"; // تنها جای تعریف نسخه — sw.js آن را از ?v= آدرس ثبت خودش می‌خواند
+const APP_VERSION = "0.9.11.1"; // تنها جای تعریف نسخه — sw.js آن را از ?v= آدرس ثبت خودش می‌خواند
 let lang = localStorage.getItem("hobab-lang") || "fa";
 const T = {
   fa: {
@@ -34,6 +34,7 @@ const T = {
     waiting: "در انتظار دریافت داده…",
     marketOpen: "بازار جهانی باز است", marketClosed: "بازار جهانی بسته است",
     lastUpdate: "آخرین به‌روزرسانی — ", goldWord: "طلا", silverWord: "نقره",
+    agoNow: "همین حالا", agoMin: " دقیقه پیش", agoHour: " ساعت پیش", offline: "آفلاین",
     fetching: "در حال دریافت خودکار…",
     failed: "دریافت ناموفق: ", autoFailedHint: " — دکمهٔ کنار فیلد را بزن",
     source: "منبع: gold-api", atHour: " — ساعت ", closedTag: " — بازار جهانی بسته است",
@@ -52,6 +53,7 @@ const T = {
     waiting: "Waiting for data…",
     marketOpen: "Global market is open", marketClosed: "Global market is closed",
     lastUpdate: "Last update — ", goldWord: "Gold", silverWord: "Silver",
+    agoNow: "just now", agoMin: " min ago", agoHour: " h ago", offline: "Offline",
     fetching: "Fetching automatically…",
     failed: "Fetch failed: ", autoFailedHint: " — use the sync button",
     source: "Source: gold-api", atHour: " — at ", closedTag: " — global market closed",
@@ -182,8 +184,8 @@ function setBtnIcon(btnId, name){
   icon.classList.remove("spin"); // تیک و خطا همیشه ثابت‌اند — هیچ‌وقت نمی‌چرخند
   icon.style.animation = "none"; // تضمین دوم: استایل درون‌خطی بر هر کلاس و قاعدهٔ CSS برنده است
   icon.textContent = name;
-  if(name === "check") // تیک متریال ۲۰ ثانیه می‌ماند، بعد دوباره آیکون رفرش
-    iconTimers[btnId] = setTimeout(() => { icon.textContent = "sync"; }, 20000);
+  if(name === "check") // تیک متریال ۴۵ ثانیه می‌ماند، بعد دوباره آیکون رفرش
+    iconTimers[btnId] = setTimeout(() => { icon.textContent = "sync"; }, 45000);
 }
 async function refreshBoth(btnId){ // کلیک روی تیک هم دوباره به‌روزرسانی می‌کند
   const icon = $(btnId).querySelector("md-icon");
@@ -223,6 +225,15 @@ function silver(){
 }
 $("xag").addEventListener("input", silver);
 
+/* ── برچسب کهنگی داده: «۳ دقیقه پیش» — هر دقیقه خودکار تازه می‌شود ── */
+function agoText(ts){
+  const m = Math.floor((Date.now() - ts) / 60000);
+  if(m < 1) return t("agoNow");
+  if(m < 60) return fa(m) + t("agoMin");
+  return fa(Math.floor(m / 60)) + t("agoHour");
+}
+setInterval(() => { try{ updateMarketCard(); }catch(e){} }, 60000);
+
 /* ── کارت وضعیت بازار جهانی ── */
 function updateMarketCard(){
   const xau = marketState.XAU, xag = marketState.XAG;
@@ -236,10 +247,11 @@ function updateMarketCard(){
   $("marketLabel").textContent = closed ? t("marketClosed") : t("marketOpen");
   // به‌روزرسانی همگام است؛ فقط جدیدترین ساعت نمایش داده می‌شود — از زمان خام، تا با تعویض زبان دوباره فرمت شود
   const times = [xau, xag].filter(s => s && s.at).map(s => new Date(s.at).getTime());
-  const tmStr = times.length
-    ? new Date(Math.max(...times)).toLocaleTimeString(t("locale"), { hour: "2-digit", minute: "2-digit" })
+  const newest = times.length ? Math.max(...times) : 0;
+  const tmStr = newest
+    ? new Date(newest).toLocaleTimeString(t("locale"), { hour: "2-digit", minute: "2-digit" })
     : ((xau && xau.t) || (xag && xag.t) || "—");
-  $("marketTimes").textContent = t("lastUpdate") + tmStr;
+  $("marketTimes").textContent = t("lastUpdate") + tmStr + (newest ? " (" + agoText(newest) + ")" : "");
 }
 
 /* ── منوی دوگانهٔ طلا / نقره — با کلیک مستقیم، مستقل از رویداد داخلی کامپوننت ── */
@@ -257,6 +269,14 @@ $("nav").addEventListener("change", () => {
   ["view-gold", "view-silver"].forEach((id, i) => { $(id).hidden = i !== k; });
 });
 
+/* میان‌بر manifest: باز شدن با ?tab=silver مستقیم تب نقره را نشان می‌دهد */
+if(new URLSearchParams(location.search).get("tab") === "silver"){
+  $("view-gold").hidden = true;
+  $("view-silver").hidden = false;
+  // انتخاب ظاهری تب بعد از تعریف شدن کامپوننت از CDN
+  customElements.whenDefined("md-tabs").then(() => { $("nav").activeTabIndex = 1; });
+}
+
 /* ── زبان: اعمال همهٔ برچسب‌ها + دکمهٔ سوییچ فا/EN ── */
 function applyLang(){
   document.documentElement.lang = lang;
@@ -266,6 +286,7 @@ function applyLang(){
   $("verBadge").textContent = lang === "fa"
     ? fieldNum(APP_VERSION) + (parseFloat(APP_VERSION) < 1 ? " بتا" : "")
     : "v" + APP_VERSION + (parseFloat(APP_VERSION) < 1 ? " Beta" : "");
+  $("offBadge").textContent = t("offline");
   $("subtitle").textContent = t("subtitle");
   $("tabGoldLabel").textContent = t("tabGold");
   $("tabSilverLabel").textContent = t("tabSilver");
@@ -337,9 +358,16 @@ function copyValue(valueId, labelId, labelKey){
   const txt = $(valueId).textContent.trim();
   if(!txt || !navigator.clipboard) return;
   navigator.clipboard.writeText(txt).then(() => {
+    if(navigator.vibrate) navigator.vibrate(10); // بازخورد لمسی کوتاه — فقط جاهایی که پشتیبانی شود
     $(labelId).textContent = t("copied"); // بازخورد کوتاه روی سرصفحهٔ کارت
     setTimeout(() => { $(labelId).textContent = t(labelKey); }, 1200);
   }).catch(() => {});
 }
 $("out").addEventListener("click", () => copyValue("zatiMesghal", "rowMesghalLabel", "rowMesghal"));
 $("silverOut").addEventListener("click", () => copyValue("silverVal", "silverRowLabel", "silverRow"));
+
+/* ── بج آفلاین کنار بج نسخه — با برگشت آنلاین، مخفی و قیمت‌ها بی‌صدا تازه می‌شوند ── */
+function syncOffline(){ $("offBadge").hidden = navigator.onLine; }
+addEventListener("online", () => { syncOffline(); autoFetch(); });
+addEventListener("offline", syncOffline);
+syncOffline();
