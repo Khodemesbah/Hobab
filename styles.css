@@ -24,8 +24,8 @@
   /* Material 3 baseline — تاریک */
   --md-sys-color-primary:#B9C8D2;   /* Blue Grey روشن برای تم تاریک */
   --md-sys-color-on-primary:#24323B;
-  --md-sys-color-primary-container:#3A4852;
-  --md-sys-color-on-primary-container:#D5E4EF;
+  --md-sys-color-primary-container:#D5E4EF; /* پرش تونال: کانتینر روشن روی زمینهٔ تیره، مثل کوییک‌ستینگز اندروید */
+  --md-sys-color-on-primary-container:#1B2A33;
   --md-sys-color-secondary-container:#3C444B;
   --md-sys-color-on-secondary-container:#D8E0E7;
   --md-sys-color-surface:#111416;
@@ -84,7 +84,6 @@ md-tabs{ margin-bottom:.75rem; --md-primary-tab-container-color:transparent; }
 
 
 md-outlined-text-field{ display:block; margin-top:1rem; width:100%; }
-#share{ margin-top:.25rem; }
 
 #out{ margin-top:1rem; display:none; }
 .row{ display:flex; justify-content:space-between; padding:.4rem 0;
@@ -105,11 +104,6 @@ md-outlined-text-field{ display:block; margin-top:1rem; width:100%; }
   padding-top:.35rem; margin-top:.25rem;
   border-top:1px solid color-mix(in srgb, currentColor 20%, transparent);
   font-size:.85rem;
-}
-.result-card md-text-button{
-  align-self:flex-start; margin-top:.25rem;
-  --md-text-button-label-text-color:var(--md-sys-color-on-primary-container);
-  --md-text-button-icon-color:var(--md-sys-color-on-primary-container);
 }
 #silverOut{ margin-top:1rem; }
 @keyframes pop{ from{ transform:scale(.9); opacity:0 } to{ transform:scale(1); opacity:1 } }
