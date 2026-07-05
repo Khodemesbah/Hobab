@@ -20,7 +20,7 @@ function normalize(raw, kind){
 }
 
 /* ── زبان و نسخه ── */
-const APP_VERSION = "0.9.8.2"; // نسخه‌های زیر ۱ برچسب بتا/Beta می‌گیرند
+const APP_VERSION = "0.9.8.3"; // نسخه‌های زیر ۱ برچسب بتا/Beta می‌گیرند
 let lang = localStorage.getItem("hobab-lang") || "fa";
 const T = {
   fa: {
@@ -74,6 +74,9 @@ const GRAM_PER_MESGHAL = 4.3318;  // هر مثقال = ۴٫۳۳۱۸ گرم ۱۸ 
 
 /* ── دریافت انس طلا/نقره از gold-api.com — رایگان، بدون کلید، با CORS ── */
 const marketState = {}; // وضعیت هر نماد برای کارت بازار
+
+// ماه هلالی با برق چهارپر — هم‌خانوادهٔ آیکون‌های اختصاصی تب‌ها، وفادار به متریال ۳
+const MOON_SVG = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12.6 21a9 9 0 0 1-8.55-11.8A9 9 0 0 1 11 3.1c.5-.06.8.5.52.9a7.2 7.2 0 0 0 9.4 10.4c.44-.23.98.1.9.6A9 9 0 0 1 12.6 21Z"/><path d="M17.5 3l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2Z"/></svg>';
 
 // بازار جهانی طلا از جمعه ≈۲۲ UTC تا یکشنبه ≈۲۲ UTC بسته است
 function marketClosedNow(){
@@ -165,28 +168,32 @@ function applyRate(fieldId, r, after){
   after();
 }
 
-/* ── دکمه‌های دریافت قیمت داخل فیلدها ── */
-function wireFetch(btnId, fieldId, fetcher, after){
-  $(btnId).addEventListener("click", async () => {
-    const icon = $(btnId).querySelector("md-icon");
-    icon.textContent = "hourglass_top";
-    icon.classList.add("spin"); // بازخورد در حال دریافت
-    // نگهبان: در هر شرایطی چرخش حداکثر ۱۲ ثانیه است
-    const watchdog = setTimeout(() => { icon.classList.remove("spin"); icon.textContent = "sync"; }, 12000);
-    try{
-      applyRate(fieldId, await fetcher(), after);
-      icon.textContent = "sync";
-    }catch(err){
-      icon.textContent = "sync_problem";
-      $(fieldId).supportingText = t("failed") + err.message;
-    }finally{
-      clearTimeout(watchdog);
-      icon.classList.remove("spin"); // پایان چرخش، موفق یا ناموفق
-    }
-  });
+/* ── دکمه‌های دریافت قیمت — رفرش در هر تب، هر دو فلز را هم‌زمان به‌روز می‌کند ── */
+const iconTimers = {}; // تایمر برگشت تیک به آیکون رفرش، برای هر دکمه
+function setBtnIcon(btnId, name){
+  const icon = $(btnId).querySelector("md-icon");
+  clearTimeout(iconTimers[btnId]);
+  icon.classList.remove("spin");
+  icon.textContent = name;
+  if(name === "check") // تیک متریال ۲۰ ثانیه می‌ماند، بعد دوباره آیکون رفرش
+    iconTimers[btnId] = setTimeout(() => { icon.textContent = "sync"; }, 20000);
 }
-wireFetch("fetchXau", "ons", () => fetchPrice("XAU"), calc);
-wireFetch("fetchXag", "xag", () => fetchPrice("XAG"), silver);
+async function refreshBoth(btnId){ // کلیک روی تیک هم دوباره به‌روزرسانی می‌کند
+  const icon = $(btnId).querySelector("md-icon");
+  clearTimeout(iconTimers[btnId]);
+  icon.textContent = "sync"; // خود آیکون رفرش می‌چرخد — ساعت شنی حذف شد
+  icon.classList.add("spin");
+  const jobs = [["ons", "XAU", calc], ["xag", "XAG", silver]].map(([fieldId, symbol, after]) =>
+    fetchPrice(symbol)
+      .then(r => applyRate(fieldId, r, after))
+      .catch(err => { $(fieldId).supportingText = t("failed") + err.message; throw err; })
+  );
+  const results = await Promise.allSettled(jobs);
+  const failed = results.some(r => r.status === "rejected");
+  setBtnIcon(btnId, failed ? "sync_problem" : "check");
+}
+$("fetchXau").addEventListener("click", () => refreshBoth("fetchXau"));
+$("fetchXag").addEventListener("click", () => refreshBoth("fetchXag"));
 
 /* ── ارزش ذاتی شمش نقره ۹۹۹ (یک کیلوگرمی) ── */
 function silver(){
@@ -204,20 +211,19 @@ $("xag").addEventListener("input", silver);
 function updateMarketCard(){
   const xau = marketState.XAU, xag = marketState.XAG;
   if(!xau && !xag) return;
-  $("marketSkl").hidden = true; $("marketLabel").hidden = false; // پایان اسکلتون
+  $("marketSkl").hidden = true; $("marketHead").hidden = false; // پایان اسکلتون
   $("marketRetry").style.display = "none"; // داده رسید؛ حالت خطا پاک
   const closed = (xau && xau.closed) || (xag && xag.closed);
   $("marketCard").className = "market " + (closed ? "closed" : "open");
-  $("marketIcon").textContent = closed ? "bedtime" : "radio_button_checked";
+  if(closed) $("marketIcon").innerHTML = MOON_SVG; // ماه بازطراحی‌شدهٔ متریال ۳
+  else $("marketIcon").textContent = "radio_button_checked";
   $("marketLabel").textContent = closed ? t("marketClosed") : t("marketOpen");
-  const parts = [];
-  // زمان از مقدار خام فرمت می‌شود تا بعد از تعویض زبان، ارقام لوکال قبلی باقی نماند
-  const tmOf = s => s.at
-    ? new Date(s.at).toLocaleTimeString(t("locale"), { hour: "2-digit", minute: "2-digit" })
-    : (s.t || "—");
-  if(xau) parts.push(t("goldWord") + ": " + tmOf(xau));
-  if(xag) parts.push(t("silverWord") + ": " + tmOf(xag));
-  $("marketTimes").textContent = t("lastUpdate") + parts.join(" · ");
+  // به‌روزرسانی همگام است؛ فقط جدیدترین ساعت نمایش داده می‌شود — از زمان خام، تا با تعویض زبان دوباره فرمت شود
+  const times = [xau, xag].filter(s => s && s.at).map(s => new Date(s.at).getTime());
+  const tmStr = times.length
+    ? new Date(Math.max(...times)).toLocaleTimeString(t("locale"), { hour: "2-digit", minute: "2-digit" })
+    : ((xau && xau.t) || (xag && xag.t) || "—");
+  $("marketTimes").textContent = t("lastUpdate") + tmStr;
 }
 
 /* ── منوی دوگانهٔ طلا / نقره — با کلیک مستقیم، مستقل از رویداد داخلی کامپوننت ── */
@@ -280,7 +286,7 @@ try{ localStorage.removeItem("hobab-trend"); }catch(e){} // پاک‌سازی د
 /* دریافت خودکار انس طلا و نقره — با حالت خطا و تلاش مجدد روی کارت بازار */
 function marketError(){
   if(marketState.XAU || marketState.XAG) return; // دست‌کم یک دادهٔ معتبر داریم
-  $("marketSkl").hidden = true; $("marketLabel").hidden = false;
+  $("marketSkl").hidden = true; $("marketHead").hidden = false;
   $("marketCard").className = "market closed";
   $("marketIcon").textContent = "error";
   $("marketLabel").textContent = t("marketError");
