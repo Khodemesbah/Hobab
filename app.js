@@ -20,7 +20,7 @@ function normalize(raw, kind){
 }
 
 /* ── زبان و نسخه ── */
-const APP_VERSION = "0.9.8.3"; // نسخه‌های زیر ۱ برچسب بتا/Beta می‌گیرند
+const APP_VERSION = "0.9.8.4"; // نسخه‌های زیر ۱ برچسب بتا/Beta می‌گیرند
 let lang = localStorage.getItem("hobab-lang") || "fa";
 const T = {
   fa: {
@@ -95,7 +95,7 @@ async function fetchPrice(symbol){ // "XAU" طلا ، "XAG" نقره
   const stale = data.updatedAt && (Date.now() - new Date(data.updatedAt).getTime() > 45 * 60 * 1000);
   const closed = marketClosedNow() || stale;
   marketState[symbol] = { closed: !!closed, t: tm, at: data.updatedAt }; // زمان خام هم می‌ماند تا با تعویض زبان دوباره فرمت شود
-  updateMarketCard();
+  try{ updateMarketCard(); }catch(e){} // خطای UI کارت نباید دریافت قیمت را ناموفق جلوه دهد
   return { price: Math.round(data.price * 10) / 10, tm: tm, closed: !!closed };
 }
 
@@ -211,7 +211,8 @@ $("xag").addEventListener("input", silver);
 function updateMarketCard(){
   const xau = marketState.XAU, xag = marketState.XAG;
   if(!xau && !xag) return;
-  $("marketSkl").hidden = true; $("marketHead").hidden = false; // پایان اسکلتون
+  $("marketSkl").hidden = true; // پایان اسکلتون
+  ($("marketHead") || $("marketLabel")).hidden = false; // سازگاری با HTML قدیمیِ هنوز کش‌شده در CDN
   $("marketRetry").style.display = "none"; // داده رسید؛ حالت خطا پاک
   const closed = (xau && xau.closed) || (xag && xag.closed);
   $("marketCard").className = "market " + (closed ? "closed" : "open");
@@ -286,7 +287,8 @@ try{ localStorage.removeItem("hobab-trend"); }catch(e){} // پاک‌سازی د
 /* دریافت خودکار انس طلا و نقره — با حالت خطا و تلاش مجدد روی کارت بازار */
 function marketError(){
   if(marketState.XAU || marketState.XAG) return; // دست‌کم یک دادهٔ معتبر داریم
-  $("marketSkl").hidden = true; $("marketHead").hidden = false;
+  $("marketSkl").hidden = true;
+  ($("marketHead") || $("marketLabel")).hidden = false; // سازگاری با HTML قدیمیِ هنوز کش‌شده در CDN
   $("marketCard").className = "market closed";
   $("marketIcon").textContent = "error";
   $("marketLabel").textContent = t("marketError");
