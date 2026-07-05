@@ -20,7 +20,7 @@ function normalize(raw, kind){
 }
 
 /* ── زبان و نسخه ── */
-const APP_VERSION = "0.9.8"; // نسخه‌های زیر ۱ برچسب Beta می‌گیرند
+const APP_VERSION = "0.9.8.1"; // نسخه‌های زیر ۱ برچسب بتا/Beta می‌گیرند
 let lang = localStorage.getItem("hobab-lang") || "fa";
 const T = {
   fa: {
@@ -168,14 +168,17 @@ function wireFetch(btnId, fieldId, fetcher, after){
     const icon = $(btnId).querySelector("md-icon");
     icon.textContent = "hourglass_top";
     icon.classList.add("spin"); // بازخورد در حال دریافت
+    // نگهبان: در هر شرایطی چرخش حداکثر ۱۲ ثانیه است
+    const watchdog = setTimeout(() => { icon.classList.remove("spin"); icon.textContent = "sync"; }, 12000);
     try{
       applyRate(fieldId, await fetcher(), after);
       icon.textContent = "sync";
-      icon.classList.remove("spin");
     }catch(err){
       icon.textContent = "sync_problem";
-      icon.classList.remove("spin");
       $(fieldId).supportingText = t("failed") + err.message;
+    }finally{
+      clearTimeout(watchdog);
+      icon.classList.remove("spin"); // پایان چرخش، موفق یا ناموفق
     }
   });
 }
@@ -225,7 +228,9 @@ function applyLang(){
   document.documentElement.dir = t("dir");
   document.title = t("name") + " | " + t("subtitle");
   $("appName").textContent = t("name");
-  $("verBadge").textContent = "v" + APP_VERSION + (parseFloat(APP_VERSION) < 1 ? " Beta" : "");
+  $("verBadge").textContent = lang === "fa"
+    ? fieldNum(APP_VERSION) + (parseFloat(APP_VERSION) < 1 ? " بتا" : "")
+    : "v" + APP_VERSION + (parseFloat(APP_VERSION) < 1 ? " Beta" : "");
   $("subtitle").textContent = t("subtitle");
   $("tabGoldLabel").textContent = t("tabGold");
   $("tabSilverLabel").textContent = t("tabSilver");
