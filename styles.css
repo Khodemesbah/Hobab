@@ -39,7 +39,6 @@
   --md-sys-color-outline:#777680;
   --md-sys-color-error-container:#F9DEDC;
   --md-sys-color-on-error-container:#410E0B;
-  --ok-bg:#C9EBCB; --ok-fg:#0B5217;
   --md-outlined-text-field-container-shape:16px;
 }
 [data-theme="dark"]{
@@ -58,7 +57,6 @@
   --md-sys-color-outline:#918F9E;
   --md-sys-color-error-container:#8C1D18;
   --md-sys-color-on-error-container:#F9DEDC;
-  --ok-bg:#123F1E; --ok-fg:#A6E5AF;
 }
 
 md-icon{
@@ -134,7 +132,7 @@ md-tabs{ margin-bottom:1.5rem; --md-primary-tab-container-color:transparent; } /
 .market-head svg{ width:1.25rem; height:1.25rem; display:block; }
 .market b{ font-size:.95rem; }
 .market span{ font-size:.78rem; color:var(--md-sys-color-on-surface-variant); }
-.market.open #marketIcon{ color:var(--ok-fg); }
+.market.open #marketIcon{ color:var(--md-sys-color-primary); }
 .market.closed #marketIcon{ color:var(--md-sys-color-on-surface-variant); }
 
 
