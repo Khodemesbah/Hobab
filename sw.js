@@ -1,6 +1,6 @@
 /* با هر انتشار، نام کش را همراه ?v= عوض کن تا نسخهٔ جدید جایگزین شود */
-const CACHE = "hobab-v0.9.8.3";
-const ASSETS = ["./", "./index.html", "./styles.css?v=0.9.8.3", "./app.js?v=0.9.8.3", "./manifest.json", "./icon.svg",
+const CACHE = "hobab-v0.9.8.4";
+const ASSETS = ["./", "./index.html", "./styles.css?v=0.9.8.4", "./app.js?v=0.9.8.4", "./manifest.json", "./icon.svg",
   "./fonts/AbarMid-Regular.woff2", "./fonts/AbarMid-SemiBold.woff2",
   "./fonts/AbarMid-Bold.woff2", "./fonts/AbarMid-ExtraBold.woff2"];
 
