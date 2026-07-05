@@ -36,6 +36,7 @@ const T = {
     lastUpdate: "آخرین به‌روزرسانی — ", goldWord: "طلا", silverWord: "نقره",
     fetching: "در حال دریافت خودکار…",
     failed: "دریافت ناموفق: ", autoFailedHint: " — دکمهٔ کنار فیلد را بزن",
+    source: "منبع: gold-api", atHour: " — ساعت ", closedTag: " — بازارهای جهانی بسته‌اند",
     required: "این مقدار لازم است",
     marketError: "دریافت دادهٔ بازار ناموفق بود — تلاش مجدد",
     locale: "fa-IR", dir: "rtl"
@@ -53,6 +54,7 @@ const T = {
     lastUpdate: "Last update — ", goldWord: "Gold", silverWord: "Silver",
     fetching: "Fetching automatically…",
     failed: "Fetch failed: ", autoFailedHint: " — use the sync button",
+    source: "Source: gold-api", atHour: " — at ", closedTag: " — global markets closed",
     required: "This value is required",
     marketError: "Couldn't fetch market data — retry",
     locale: "en-US", dir: "ltr"
@@ -89,7 +91,7 @@ async function fetchPrice(symbol){ // "XAU" طلا ، "XAG" نقره
   // بسته بودن بازار: تقویم آخر هفته (قطعی) یا کهنگی دادهٔ منبع (پشتیبان)
   const stale = data.updatedAt && (Date.now() - new Date(data.updatedAt).getTime() > 45 * 60 * 1000);
   const closed = marketClosedNow() || stale;
-  marketState[symbol] = { closed: !!closed, t: tm };
+  marketState[symbol] = { closed: !!closed, t: tm, at: data.updatedAt }; // زمان خام هم می‌ماند تا با تعویض زبان دوباره فرمت شود
   updateMarketCard();
   return { price: Math.round(data.price * 10) / 10, tm: tm, closed: !!closed };
 }
@@ -109,6 +111,9 @@ $("themeBtn").addEventListener("click", () => {
 });
 function syncThemeIcon(){
   $("themeIcon").textContent = root.dataset.theme === "dark" ? "light_mode" : "dark_mode";
+  // نوار وضعیت PWA باید با تم هماهنگ شود؛ متای ثابت در تم تاریک رنگ روشن نشان می‌داد
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.content = root.dataset.theme === "dark" ? "#131320" : "#565992";
 }
 
 /* ── ثبت Service Worker برای PWA (نصب روی گوشی + آفلاین) ── */
@@ -124,7 +129,7 @@ $("usd").addEventListener("input", e => {
 $("ons").addEventListener("input", e => { e.target.error = false; calc(); });
 
 /* فیلد خالی هنگام ترک: خطای قابل‌دیدن */
-["ons", "usd", "xag"].forEach(id => { // فیلد نقره هم اعتبارسنجی می‌شود (قبلاً جا مانده بود)
+["ons", "usd"].forEach(id => {
   $(id).addEventListener("blur", e => {
     const empty = !String(e.target.value).trim();
     e.target.error = empty;
@@ -151,18 +156,7 @@ function calc(){
 
 /* ── قرار دادن نرخ در فیلد + ذخیره برای دفعهٔ بعد و حالت آفلاین ── */
 const store = JSON.parse(localStorage.getItem("hobabsanj-rates") || "{}");
-/* توقف چرخش دکمهٔ هر فیلد — دقیقاً لحظه‌ای که داده می‌نشیند، مستقل از سرنوشت درخواست */
-const FIELD_BTN = { ons: "fetchXau", xag: "fetchXag" };
-function stopSpin(fieldId){
-  const btnId = FIELD_BTN[fieldId];
-  if(!btnId) return;
-  const icon = $(btnId).querySelector("md-icon");
-  icon.classList.remove("spin");
-  icon.textContent = "sync";
-}
-
 function applyRate(fieldId, r, after){
-  stopSpin(fieldId); // رسیدن داده = پایان چرخش
   $(fieldId).value = fieldNum(r.price);
   $(fieldId).error = false;
   $(fieldId).supportingText = " "; // زمان و منبع در کارت وضعیت بازار نمایش داده می‌شود
@@ -177,8 +171,8 @@ function wireFetch(btnId, fieldId, fetcher, after){
     const icon = $(btnId).querySelector("md-icon");
     icon.textContent = "hourglass_top";
     icon.classList.add("spin"); // بازخورد در حال دریافت
-    // نگهبان: هم‌راستا با مهلت ۱۰ ثانیه‌ای fetch؛ فقط چرخش را قطع می‌کند و آیکون خطا را دست نمی‌زند
-    const watchdog = setTimeout(() => icon.classList.remove("spin"), 10000);
+    // نگهبان: در هر شرایطی چرخش حداکثر ۱۲ ثانیه است
+    const watchdog = setTimeout(() => { icon.classList.remove("spin"); icon.textContent = "sync"; }, 12000);
     try{
       applyRate(fieldId, await fetcher(), after);
       icon.textContent = "sync";
@@ -217,8 +211,12 @@ function updateMarketCard(){
   $("marketIcon").textContent = closed ? "bedtime" : "radio_button_checked";
   $("marketLabel").textContent = closed ? t("marketClosed") : t("marketOpen");
   const parts = [];
-  if(xau) parts.push(t("goldWord") + ": " + (xau.t || "—"));
-  if(xag) parts.push(t("silverWord") + ": " + (xag.t || "—"));
+  // زمان از مقدار خام فرمت می‌شود تا بعد از تعویض زبان، ارقام لوکال قبلی باقی نماند
+  const tmOf = s => s.at
+    ? new Date(s.at).toLocaleTimeString(t("locale"), { hour: "2-digit", minute: "2-digit" })
+    : (s.t || "—");
+  if(xau) parts.push(t("goldWord") + ": " + tmOf(xau));
+  if(xag) parts.push(t("silverWord") + ": " + tmOf(xag));
   $("marketTimes").textContent = t("lastUpdate") + parts.join(" · ");
 }
 
@@ -229,6 +227,12 @@ document.querySelectorAll("#nav md-primary-tab").forEach((tab, k) => {
       $(id).hidden = i !== k;
     });
   });
+});
+// جابه‌جایی با صفحه‌کلید (کلیدهای جهت‌نما) فقط رویداد change را می‌فرستد، نه click
+$("nav").addEventListener("change", () => {
+  const k = $("nav").activeTabIndex;
+  if(k == null || k < 0) return;
+  ["view-gold", "view-silver"].forEach((id, i) => { $(id).hidden = i !== k; });
 });
 
 /* ── زبان: اعمال همهٔ برچسب‌ها + دکمهٔ سوییچ فا/EN ── */
@@ -250,7 +254,11 @@ function applyLang(){
   $("rowGeramLabel").textContent = t("rowGeram");
   $("silverRowLabel").textContent = t("silverRow");
   updateMarketCard();
-  ["ons", "xag"].forEach(id => { if(store[id] && $(id).value) $(id).value = fieldNum(store[id].price); });
+  // مقدار فعلی فیلد مبنا است؛ نسخهٔ قبلی مقدار دستی کاربر را با نرخ ذخیره‌شده جایگزین می‌کرد
+  ["ons", "xag"].forEach(id => {
+    const cur = decimals($(id).value);
+    if(cur) $(id).value = fieldNum(cur);
+  });
   calc(); silver();
 }
 $("langBtn").addEventListener("click", () => {
@@ -267,11 +275,7 @@ $("langBtn").addEventListener("click", () => {
   }
 });
 applyLang();
-delete store.usd; // پاک‌سازی نرخ دستی ذخیره‌شده از نسخه‌های قبل
-try{
-  localStorage.setItem("hobabsanj-rates", JSON.stringify(store));
-  localStorage.removeItem("hobab-trend"); // بازماندهٔ نمودار حذف‌شده
-}catch(e){}
+try{ localStorage.removeItem("hobab-trend"); }catch(e){} // پاک‌سازی دادهٔ نمودار حذف‌شده
 
 /* دریافت خودکار انس طلا و نقره — با حالت خطا و تلاش مجدد روی کارت بازار */
 function marketError(){
