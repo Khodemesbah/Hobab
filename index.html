@@ -15,14 +15,17 @@
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <meta name="theme-color" content="#565992">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <!-- iOS: نصب تمام‌صفحه + استایل نوار وضعیت -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
   <!-- متا برای موتورهای جستجو و پیش‌نمایش لینک در پیام‌رسان‌ها -->
   <meta name="description" content="حباب — اعلام‌گر ارزش ذاتی طلا و نقره بر پایهٔ انس جهانی و دلار بازار آزاد">
   <meta property="og:title" content="حباب | ارزش ذاتی طلا و نقره">
   <meta property="og:description" content="ارزش ذاتی مثقال، گرم ۱۸ عیار و شمش نقره — زنده از انس جهانی">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://khodemesbah.github.io/HobabSanj/">
-  <meta property="og:image" content="https://khodemesbah.github.io/HobabSanj/icons/apple-touch-icon.png">
+  <meta property="og:url" content="https://khodemesbah.github.io/Hobab/">
+  <meta property="og:image" content="https://khodemesbah.github.io/Hobab/icons/apple-touch-icon.png">
   <meta name="twitter:card" content="summary">
 
   <!-- ایمپورت مستقیم باندل‌شده؛ بدون importmap تا در وب‌ویوهای قدیمی هم کار کند -->
@@ -34,7 +37,7 @@
     <header>
       <md-icon class="logo">bubble_chart</md-icon>
       <h1><span id="appName">حباب</span></h1>
-      <span id="verBadge" class="badge"></span>
+      <div class="badges"><span id="offBadge" class="badge off" hidden>آفلاین</span><span id="verBadge" class="badge"></span></div>
       <md-icon-button id="langBtn" title="English / فارسی"><md-icon>language</md-icon></md-icon-button>
       <md-icon-button id="themeBtn" title="پوستهٔ روشن/تاریک"><md-icon id="themeIcon">dark_mode</md-icon></md-icon-button>
     </header>
