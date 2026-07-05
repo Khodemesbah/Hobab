@@ -20,7 +20,7 @@ function normalize(raw, kind){
 }
 
 /* ── زبان و نسخه ── */
-const APP_VERSION = "0.9.5.1"; // نسخه‌های زیر ۱ برچسب Beta می‌گیرند
+const APP_VERSION = "0.9.5.2"; // نسخه‌های زیر ۱ برچسب Beta می‌گیرند
 let lang = localStorage.getItem("hobab-lang") || "fa";
 const T = {
   fa: {
@@ -32,7 +32,7 @@ const T = {
     silverRow: "ارزش ذاتی شمش یک‌کیلویی ۹۹۹",
     toman: " تومان", dollar: " دلار", read: "خوانده شد: ",
     waiting: "در انتظار دریافت داده…",
-    marketOpen: "بازارهای جهانی بازند", marketClosed: "بازارهای جهانی بسته‌اند",
+    marketOpen: "بازارهای جهانی فعال هستند", marketClosed: "بازارهای جهانی بسته‌اند",
     lastUpdate: "آخرین به‌روزرسانی — ", goldWord: "طلا", silverWord: "نقره",
     fetching: "در حال دریافت خودکار…",
     failed: "دریافت ناموفق: ", autoFailedHint: " — دکمهٔ کنار فیلد را بزن",
