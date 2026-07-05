@@ -1,6 +1,29 @@
+/* ── فونت ابر (AbarMid) — خودمیزبان؛ نام فایل‌ها در مخزن باید دقیقاً همین باشد ── */
+@font-face{
+  font-family:"AbarMid";
+  src:url("fonts/AbarMid-Regular.woff2") format("woff2");
+  font-weight:400; font-display:swap;
+}
+@font-face{
+  font-family:"AbarMid";
+  src:url("fonts/AbarMid-SemiBold.woff2") format("woff2");
+  font-weight:500 600; /* نقش Medium تایپ‌اسکیل متریال (تب‌ها و دکمه‌ها) را هم همین می‌گیرد */
+  font-display:swap;
+}
+@font-face{
+  font-family:"AbarMid";
+  src:url("fonts/AbarMid-Bold.woff2") format("woff2");
+  font-weight:700; font-display:swap;
+}
+@font-face{
+  font-family:"AbarMid";
+  src:url("fonts/AbarMid-ExtraBold.woff2") format("woff2");
+  font-weight:800; font-display:swap;
+}
+
 :root{
-  --md-ref-typeface-plain:"Vazirmatn";
-  --md-ref-typeface-brand:"Vazirmatn";
+  --md-ref-typeface-plain:"AbarMid";
+  --md-ref-typeface-brand:"AbarMid";
   color-scheme: light; /* کنترل‌های بومی مرورگر هماهنگ با تم */
   /* Material 3 baseline — روشن */
   --md-sys-color-primary:#565992;   /* پالت یاسی Material You — برگرفته از سواچ گوشی کاربر */
@@ -47,7 +70,7 @@ md-icon{
 body{
   margin:0; padding:1.25rem 1rem; box-sizing:border-box;
   min-height:100svh; /* ارتفاع واقعی ویوپورت موبایل با احتساب نوار آدرس */
-  font-family:Vazirmatn,Tahoma,sans-serif;
+  font-family:"AbarMid",Vazirmatn,Tahoma,sans-serif;
   background:var(--md-sys-color-surface);
   color:var(--md-sys-color-on-surface);
   display:flex; justify-content:center;
