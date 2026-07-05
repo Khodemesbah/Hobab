@@ -107,7 +107,11 @@ md-tabs{ margin-bottom:1.5rem; --md-primary-tab-container-color:transparent; } /
   background:var(--md-sys-color-surface);
 }
 .market-info{ flex:1; }
-.market b{ display:block; font-size:.95rem; }
+/* آیکون وضعیت هم‌ردیف با برچسب — دقیقاً کنار متن وضعیت بازارهای جهانی */
+.market-head{ display:flex; align-items:center; gap:.45rem; }
+.market-head md-icon{ font-size:1.25rem; width:1.25rem; height:1.25rem; }
+.market-head svg{ width:1.25rem; height:1.25rem; display:block; }
+.market b{ font-size:.95rem; }
 .market span{ font-size:.78rem; color:var(--md-sys-color-on-surface-variant); }
 .market.open #marketIcon{ color:var(--ok-fg); }
 .market.closed #marketIcon{ color:var(--md-sys-color-on-surface-variant); }
