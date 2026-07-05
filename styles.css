@@ -3,17 +3,17 @@
   --md-ref-typeface-brand:"Vazirmatn";
   color-scheme: light; /* کنترل‌های بومی مرورگر هماهنگ با تم */
   /* Material 3 baseline — روشن */
-  --md-sys-color-primary:#7A5900;   /* پالت طلایی — تن‌های M3 از سید کهربایی، زنده و هم‌معنا با محصول */
+  --md-sys-color-primary:#565992;   /* پالت یاسی Material You — برگرفته از سواچ گوشی کاربر */
   --md-sys-color-on-primary:#FFFFFF;
-  --md-sys-color-primary-container:#FFDF9E;
-  --md-sys-color-on-primary-container:#261A00;
-  --md-sys-color-secondary-container:#F5E2BB;
-  --md-sys-color-on-secondary-container:#241A04;
-  --md-sys-color-surface:#FFF8F1;
-  --md-sys-color-on-surface:#1F1B13;
-  --md-sys-color-surface-container:#F3ECDE;
-  --md-sys-color-on-surface-variant:#4D4639;
-  --md-sys-color-outline:#7F7667;
+  --md-sys-color-primary-container:#C7C5EF;
+  --md-sys-color-on-primary-container:#12134B;
+  --md-sys-color-secondary-container:#E2E0F4;
+  --md-sys-color-on-secondary-container:#191A2C;
+  --md-sys-color-surface:#FBF8FF;
+  --md-sys-color-on-surface:#1B1B21;
+  --md-sys-color-surface-container:#EEECF7;
+  --md-sys-color-on-surface-variant:#46464F;
+  --md-sys-color-outline:#777680;
   --md-sys-color-error-container:#F9DEDC;
   --md-sys-color-on-error-container:#410E0B;
   --ok-bg:#C9EBCB; --ok-fg:#0B5217;
@@ -22,17 +22,17 @@
 [data-theme="dark"]{
   color-scheme: dark;
   /* Material 3 baseline — تاریک */
-  --md-sys-color-primary:#EAC248;   /* طلایی روشن برای تم تاریک */
-  --md-sys-color-on-primary:#3F2E00;
-  --md-sys-color-primary-container:#FFDF9E; /* پرش تونال: کانتینر روشن روی زمینهٔ تیره */
-  --md-sys-color-on-primary-container:#261A00;
-  --md-sys-color-secondary-container:#4E4426;
-  --md-sys-color-on-secondary-container:#F5E2BB;
-  --md-sys-color-surface:#17130B;
-  --md-sys-color-on-surface:#EAE2D4;
-  --md-sys-color-surface-container:#242015;
-  --md-sys-color-on-surface-variant:#CFC6B4;
-  --md-sys-color-outline:#999080;
+  --md-sys-color-primary:#C5C3EC;   /* یاسی روشن — همان چیپ‌های فعال کوییک‌ستینگز */
+  --md-sys-color-on-primary:#2E2F5D;
+  --md-sys-color-primary-container:#C7C5EF; /* پرش تونال: کانتینر روشن روی زمینهٔ تیره */
+  --md-sys-color-on-primary-container:#12134B;
+  --md-sys-color-secondary-container:#44465A; /* سربی-بنفش سواچ */
+  --md-sys-color-on-secondary-container:#E2E0F9;
+  --md-sys-color-surface:#131320;
+  --md-sys-color-on-surface:#E4E1EC;
+  --md-sys-color-surface-container:#23252F; /* زمینهٔ سواچ گوشی */
+  --md-sys-color-on-surface-variant:#C8C5D4;
+  --md-sys-color-outline:#918F9E;
   --md-sys-color-error-container:#8C1D18;
   --md-sys-color-on-error-container:#F9DEDC;
   --ok-bg:#123F1E; --ok-fg:#A6E5AF;
