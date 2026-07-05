@@ -153,8 +153,6 @@ md-outlined-text-field{
 }
 
 #out{ margin-top:1rem; display:none; }
-.row{ display:flex; justify-content:space-between; padding:.4rem 0;
-      color:var(--md-sys-color-on-surface-variant); }
 
 /* کارت نتیجه — تونال روی primary-container، مطابق M3 */
 .result-card{
