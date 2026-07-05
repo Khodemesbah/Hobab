@@ -20,7 +20,7 @@ function normalize(raw, kind){
 }
 
 /* ── زبان و نسخه ── */
-const APP_VERSION = "0.9.6"; // نسخه‌های زیر ۱ برچسب Beta می‌گیرند
+const APP_VERSION = "0.9.7.1"; // نسخه‌های زیر ۱ برچسب Beta می‌گیرند
 let lang = localStorage.getItem("hobab-lang") || "fa";
 const T = {
   fa: {
@@ -67,6 +67,8 @@ const t = k => T[lang][k];
 const fa = n => Math.round(n).toLocaleString(t("locale"));
 const fa10k = n => (Math.round(n / 10000) * 10000).toLocaleString(t("locale")); // نتایج تومانی: گرد به ده‌هزار
 const fa1d = n => (Math.round(n * 10) / 10).toLocaleString(t("locale"), { maximumFractionDigits: 1 }); // دلاری: یک رقم اعشار
+// ارقام داخل فیلد: در فارسی فقط رقم‌ها تبدیل می‌شوند؛ نقطهٔ اعشار می‌ماند تا پارس نشکند
+const fieldNum = n => lang === "fa" ? String(n).replace(/[0-9]/g, d => "۰۱۲۳۴۵۶۷۸۹"[d]) : String(n);
 
 /* ── فرمول ── */
 const MESGHAL_DIVISOR = 9.5742;   // انس×دلار ÷ این عدد = ذاتی مثقال
@@ -138,6 +140,9 @@ $("ons").addEventListener("input", e => { e.target.error = false; calc(); });
   });
 });
 
+/* بازخورد بصری: پرش کوتاه عدد هنگام به‌روز شدن */
+function bump(el){ el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); }
+
 /* ── محاسبهٔ زندهٔ ارزش ذاتی — مثقال و گرم هم‌زمان ── */
 function calc(){
   const ons = decimals($("ons").value);   // انس: بدون انعطاف، با حفظ اعشار
@@ -149,6 +154,7 @@ function calc(){
   $("out").style.display = "block";
   $("zatiMesghal").textContent = fa10k(mesghal) + t("toman");
   $("zatiGeram").textContent = fa10k(geram) + t("toman");
+  bump($("zatiMesghal")); // بازخورد بصری تغییر عدد
 }
 
 /* ── قرار دادن نرخ در فیلد + ذخیره برای دفعهٔ بعد و حالت آفلاین ── */
@@ -156,7 +162,7 @@ const store = JSON.parse(localStorage.getItem("hobabsanj-rates") || "{}");
 const infoText = r => r.manual ? t("manual")
   : t("source") + (r.tm ? t("atHour") + r.tm : "") + (r.closed ? t("closedTag") : "");
 function applyRate(fieldId, r, after){
-  $(fieldId).value = r.price;
+  $(fieldId).value = fieldNum(r.price);
   $(fieldId).error = false;
   $(fieldId).supportingText = " "; // زمان و منبع در کارت وضعیت بازار نمایش داده می‌شود
   store[fieldId] = r;
@@ -169,11 +175,14 @@ function wireFetch(btnId, fieldId, fetcher, after){
   $(btnId).addEventListener("click", async () => {
     const icon = $(btnId).querySelector("md-icon");
     icon.textContent = "hourglass_top";
+    icon.classList.add("spin"); // بازخورد در حال دریافت
     try{
       applyRate(fieldId, await fetcher(), after);
       icon.textContent = "sync";
+      icon.classList.remove("spin");
     }catch(err){
       icon.textContent = "sync_problem";
+      icon.classList.remove("spin");
       $(fieldId).supportingText = t("failed") + err.message;
     }
   });
@@ -188,6 +197,7 @@ function silver(){
   const v = x * (1000 / 31.1035) * 0.999; // ۱۰۰۰ گرم ÷ گرم‌به‌انس × خلوص ۹۹۹
   $("silverOut").style.display = "block";
   $("silverVal").textContent = fa1d(v) + t("dollar");
+  bump($("silverVal"));
 }
 $("xag").addEventListener("input", silver);
 
@@ -233,6 +243,7 @@ function applyLang(){
   $("silverRowLabel").textContent = t("silverRow");
   if(!marketState.XAU && !marketState.XAG) $("marketLabel").textContent = t("waiting");
   updateMarketCard();
+  ["ons", "usd", "xag"].forEach(id => { if(store[id] && $(id).value) $(id).value = fieldNum(store[id].price); });
   if(store.usd && $("usd").value) $("usd").supportingText = infoText(store.usd);
   calc(); silver();
 }
@@ -245,7 +256,7 @@ $("langBtn").addEventListener("click", () => {
 /* ── باز شدن صفحه: زبان و برچسب‌ها، آخرین نرخ‌های ذخیره‌شده، بعد دریافت خودکار ── */
 ["ons", "usd", "xag"].forEach(id => {
   if(store[id]){
-    $(id).value = store[id].price;
+    $(id).value = fieldNum(store[id].price);
     $(id).supportingText = id === "usd" ? infoText(store[id]) + t("saved") : " ";
   }
 });
