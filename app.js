@@ -20,7 +20,7 @@ function normalize(raw, kind){
 }
 
 /* ── زبان و نسخه ── */
-const APP_VERSION = "0.9.9.4"; // تنها جای تعریف نسخه — sw.js آن را از ?v= آدرس ثبت خودش می‌خواند
+const APP_VERSION = "0.9.9.5"; // تنها جای تعریف نسخه — sw.js آن را از ?v= آدرس ثبت خودش می‌خواند
 let lang = localStorage.getItem("hobab-lang") || "fa";
 const T = {
   fa: {
@@ -32,11 +32,11 @@ const T = {
     silverRow: "ارزش ذاتی شمش یک‌کیلویی ۹۹۹",
     toman: " تومان", dollar: " دلار", read: "خوانده شد: ",
     waiting: "در انتظار دریافت داده…",
-    marketOpen: "بازارهای جهانی فعال هستند", marketClosed: "بازارهای جهانی بسته‌اند",
+    marketOpen: "بازار جهانی باز است", marketClosed: "بازار جهانی بسته است",
     lastUpdate: "آخرین به‌روزرسانی — ", goldWord: "طلا", silverWord: "نقره",
     fetching: "در حال دریافت خودکار…",
     failed: "دریافت ناموفق: ", autoFailedHint: " — دکمهٔ کنار فیلد را بزن",
-    source: "منبع: gold-api", atHour: " — ساعت ", closedTag: " — بازارهای جهانی بسته‌اند",
+    source: "منبع: gold-api", atHour: " — ساعت ", closedTag: " — بازار جهانی بسته است",
     required: "این مقدار لازم است", copied: "کپی شد ✓",
     marketError: "دریافت دادهٔ بازار ناموفق بود — تلاش مجدد",
     locale: "fa-IR", dir: "rtl"
@@ -50,11 +50,11 @@ const T = {
     silverRow: "Intrinsic value of 1 kg .999 bar",
     toman: " Toman", dollar: " USD", read: "Parsed: ",
     waiting: "Waiting for data…",
-    marketOpen: "Global markets are open", marketClosed: "Global markets are closed",
+    marketOpen: "Global market is open", marketClosed: "Global market is closed",
     lastUpdate: "Last update — ", goldWord: "Gold", silverWord: "Silver",
     fetching: "Fetching automatically…",
     failed: "Fetch failed: ", autoFailedHint: " — use the sync button",
-    source: "Source: gold-api", atHour: " — at ", closedTag: " — global markets closed",
+    source: "Source: gold-api", atHour: " — at ", closedTag: " — global market closed",
     required: "This value is required", copied: "Copied ✓",
     marketError: "Couldn't fetch market data — retry",
     locale: "en-US", dir: "ltr"
@@ -78,6 +78,8 @@ let lastFetchAt = 0; // زمان آخرین دریافت موفق — مبنای
 
 // ماه هلالی با برق چهارپر — هم‌خانوادهٔ آیکون‌های اختصاصی تب‌ها، وفادار به متریال ۳
 const MOON_SVG = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12.6 21a9 9 0 0 1-8.55-11.8A9 9 0 0 1 11 3.1c.5-.06.8.5.52.9a7.2 7.2 0 0 0 9.4 10.4c.44-.23.98.1.9.6A9 9 0 0 1 12.6 21Z"/><path d="M17.5 3l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2Z"/></svg>';
+// دات توپُر برای وضعیت «باز» — الگوی live status متریال؛ رنگ از primary تم می‌آید، نه سبز خارج از سیستم
+const DOT_SVG = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>';
 
 // بازار جهانی طلا از جمعه ≈۲۲ UTC تا یکشنبه ≈۲۲ UTC بسته است
 function marketClosedNow(){
@@ -230,8 +232,7 @@ function updateMarketCard(){
   $("marketRetry").style.display = "none"; // داده رسید؛ حالت خطا پاک
   const closed = (xau && xau.closed) || (xag && xag.closed);
   $("marketCard").className = "market " + (closed ? "closed" : "open");
-  if(closed) $("marketIcon").innerHTML = MOON_SVG; // ماه بازطراحی‌شدهٔ متریال ۳
-  else $("marketIcon").textContent = "radio_button_checked";
+  $("marketIcon").innerHTML = closed ? MOON_SVG : DOT_SVG; // ماه متریال ۳ / دات یاسی primary
   $("marketLabel").textContent = closed ? t("marketClosed") : t("marketOpen");
   // به‌روزرسانی همگام است؛ فقط جدیدترین ساعت نمایش داده می‌شود — از زمان خام، تا با تعویض زبان دوباره فرمت شود
   const times = [xau, xag].filter(s => s && s.at).map(s => new Date(s.at).getTime());
