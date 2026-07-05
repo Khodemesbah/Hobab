@@ -8,6 +8,7 @@ const digits = s => String(s)
 const decimals = s => parseFloat(String(s)
   .replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))
   .replace(/[٠-٩]/g, d => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
+  .replace(/[٫,]/g, ".") // ممیز فارسی و کاما هم اعشارند — «۴۱۸۱٫۳» نباید ۴۱۸۱۳ خوانده شود
   .replace(/[^\d.]/g, ""));
 
 // دلار: تا ۳ رقم ×۱۰۰۰ — فرم کامل بدون تغییر
@@ -20,7 +21,7 @@ function normalize(raw, kind){
 }
 
 /* ── زبان و نسخه ── */
-const APP_VERSION = "1.0.0-pre"; // تنها جای تعریف نسخه — sw.js آن را از ?v= آدرس ثبت خودش می‌خواند
+const APP_VERSION = "1.0.1-pre"; // تنها جای تعریف نسخه — sw.js آن را از ?v= آدرس ثبت خودش می‌خواند
 let lang = localStorage.getItem("hobab-lang") || "fa";
 const T = {
   fa: {
@@ -31,14 +32,12 @@ const T = {
     rowMesghal: "ارزش ذاتی مثقال", rowGeram: "ارزش ذاتی گرم ۱۸ عیار",
     silverRow: "ارزش ذاتی شمش یک‌کیلویی ۹۹۹",
     toman: " تومان", dollar: " دلار", read: "خوانده شد: ",
-    waiting: "در انتظار دریافت داده…",
     marketOpen: "بازار جهانی باز است", marketClosed: "بازار جهانی بسته است",
-    lastUpdate: "آخرین به‌روزرسانی — ", goldWord: "طلا", silverWord: "نقره",
+    lastUpdate: "آخرین به‌روزرسانی — ",
     agoNow: "همین حالا", agoMin: " دقیقه پیش", agoHour: " ساعت پیش", offline: "آفلاین",
     titleFetch: "دریافت از API", titleTheme: "پوستهٔ روشن/تاریک", titleRetry: "تلاش مجدد",
     fetching: "در حال دریافت خودکار…",
     failed: "دریافت ناموفق: ", autoFailedHint: " — دکمهٔ کنار فیلد را بزن",
-    source: "منبع: gold-api", atHour: " — ساعت ", closedTag: " — بازار جهانی بسته است",
     required: "این مقدار لازم است", copied: "کپی شد ✓",
     marketError: "دریافت دادهٔ بازار ناموفق بود — تلاش مجدد",
     locale: "fa-IR", dir: "rtl"
@@ -51,14 +50,12 @@ const T = {
     rowMesghal: "Intrinsic value per mesghal", rowGeram: "Intrinsic value per 18k gram",
     silverRow: "Intrinsic value of 1 kg .999 bar",
     toman: " Toman", dollar: " USD", read: "Parsed: ",
-    waiting: "Waiting for data…",
     marketOpen: "Global market is open", marketClosed: "Global market is closed",
-    lastUpdate: "Last update — ", goldWord: "Gold", silverWord: "Silver",
+    lastUpdate: "Last update — ",
     agoNow: "just now", agoMin: " min ago", agoHour: " h ago", offline: "Offline",
     titleFetch: "Fetch from API", titleTheme: "Light/dark theme", titleRetry: "Retry",
     fetching: "Fetching automatically…",
     failed: "Fetch failed: ", autoFailedHint: " — use the sync button",
-    source: "Source: gold-api", atHour: " — at ", closedTag: " — global market closed",
     required: "This value is required", copied: "Copied ✓",
     marketError: "Couldn't fetch market data — retry",
     locale: "en-US", dir: "ltr"
@@ -104,7 +101,7 @@ async function fetchPrice(symbol){ // "XAU" طلا ، "XAG" نقره
   marketState[symbol] = { closed: !!closed, t: tm, at: data.updatedAt }; // زمان خام هم می‌ماند تا با تعویض زبان دوباره فرمت شود
   try{ updateMarketCard(); }catch(e){} // خطای UI کارت نباید دریافت قیمت را ناموفق جلوه دهد
   lastFetchAt = Date.now();
-  return { price: Math.round(data.price * 10) / 10, tm: tm, closed: !!closed };
+  return { price: Math.round(data.price * 10) / 10 }; // زمان و وضعیت بازار در marketState نگه‌داری می‌شوند
 }
 
 /* ── DOM ── */
@@ -308,6 +305,8 @@ function applyLang(){
   $("rowGeramLabel").textContent = t("rowGeram");
   $("silverRowLabel").textContent = t("silverRow");
   updateMarketCard();
+  // پیام خطای کارت بازار (اگر نمایان است) هم با زبان جدید بازنویسی شود
+  if($("marketRetry").style.display === "inline-flex") marketError();
   // مقدار فعلی فیلد مبنا است؛ نسخهٔ قبلی مقدار دستی کاربر را با نرخ ذخیره‌شده جایگزین می‌کرد
   ["ons", "xag"].forEach(id => {
     const cur = decimals($(id).value);
