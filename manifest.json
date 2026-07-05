@@ -1,8 +1,11 @@
 {
   "name": "Hobab",
   "short_name": "Hobab",
+  "id": "./",
+  "description": "اعلام‌گر ارزش ذاتی طلا و نقره بر پایهٔ انس جهانی و دلار بازار آزاد",
   "start_url": ".",
   "display": "standalone",
+  "orientation": "portrait",
   "dir": "rtl",
   "lang": "fa",
   "background_color": "#FBF8FF",
@@ -15,7 +18,7 @@
   ],
   "screenshots": [
     { "src": "images/image-light.png", "sizes": "1024x2091", "type": "image/png", "form_factor": "narrow", "label": "تم روشن — محاسبهٔ ارزش ذاتی طلا" },
-    { "src": "images/image-dark.png", "sizes": "1024x2187", "type": "image/png", "form_factor": "narrow", "label": "تم تاریک" }
+    { "src": "images/image-dark.png", "sizes": "1024x2091", "type": "image/png", "form_factor": "narrow", "label": "تم تاریک" }
   ],
   "shortcuts": [
     { "name": "نقره", "short_name": "نقره", "url": "./?tab=silver", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
