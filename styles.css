@@ -107,13 +107,18 @@ body{
 }
 header{ display:flex; align-items:center; gap:.4rem; }
 header h1{ font-size:1.5rem; font-weight:800; margin:0; flex:1; display:flex; align-items:center; gap:.5rem; }
-/* نشان نسخه — به سبک label/chip متریال */
+/* نشان‌ها — به سبک label/chip متریال، در نوار اختصاصی بالای کارت، جدا از آیکون‌های هدر */
+.badges{ position:absolute; top:1rem; inset-inline-end:1.25rem; display:flex; gap:.4rem; }
 .badge{
-  position:absolute; top:1rem; inset-inline-end:1.25rem; /* در نوار اختصاصی بالای کارت، جدا از آیکون‌های هدر */
   font-size:.62rem; font-weight:700; letter-spacing:.02em;
   padding:.18rem .55rem; border-radius:999px;
   background:var(--md-sys-color-primary-container);
   color:var(--md-sys-color-on-primary-container);
+}
+/* بج آفلاین — رنگ‌های error-container تم، در یک نگاه قابل‌تشخیص */
+.badge.off{
+  background:var(--md-sys-color-error-container);
+  color:var(--md-sys-color-on-error-container);
 }
 .logo{ color:var(--md-sys-color-primary); }
 .subtitle{ margin:.2rem 0 1rem; font-size:.85rem; color:var(--md-sys-color-on-surface-variant); }
