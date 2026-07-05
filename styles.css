@@ -70,6 +70,27 @@ md-icon{
 /* ریشهٔ باگ اسکلتون: display:flex روی عنصر، ویژگی hidden را بی‌اثر می‌کرد؛ این قاعده همیشه برنده است */
 [hidden]{ display:none !important; }
 
+/* ── جلوگیری از FOUC: تا رسیدن کامپوننت‌های Material از CDN، محتوای خام دیده نشود ── */
+/* فیلدها و تب‌های هنوز تعریف‌نشده: اسکلتون هم‌اندازه به‌جای محتوای خام — بدون پرش لی‌اوت */
+md-outlined-text-field:not(:defined),
+md-tabs:not(:defined){
+  display:block; border-radius:16px;
+  background:linear-gradient(90deg,
+    var(--md-sys-color-surface) 25%,
+    color-mix(in srgb, var(--md-sys-color-on-surface) 8%, var(--md-sys-color-surface)) 50%,
+    var(--md-sys-color-surface) 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.2s linear infinite;
+}
+md-outlined-text-field:not(:defined){ height:3.5rem; margin-top:1rem; }
+md-tabs:not(:defined){ height:3rem; margin-bottom:1.5rem; }
+/* محتوای خام داخلشان (آیکون $، برچسب تب‌ها، دکمه‌ها) تا آن لحظه پنهان */
+md-outlined-text-field:not(:defined) > *,
+md-tabs:not(:defined) > *{ display:none; }
+/* آیکون‌ها و دکمه‌آیکون‌های تنها (هدر، کارت بازار) هم تا تعریف شدن نامرئی */
+md-icon:not(:defined),
+md-icon-button:not(:defined){ visibility:hidden; }
+
 body{
   margin:0; padding:1.25rem 1rem; box-sizing:border-box;
   min-height:100svh; /* ارتفاع واقعی ویوپورت موبایل با احتساب نوار آدرس */
@@ -148,7 +169,7 @@ md-outlined-text-field{
 @keyframes pop{ from{ transform:scale(.9); opacity:0 } to{ transform:scale(1); opacity:1 } }
 
 /* بازخوردهای تعاملی */
-.result-card{ transition:transform .15s ease; }
+.result-card{ transition:transform .15s ease; cursor:pointer; }
 .result-card:active{ transform:scale(.985); } /* حس لمس */
 .bump{ animation:bump .35s cubic-bezier(.2,1.4,.4,1); } /* پرش عدد هنگام به‌روزرسانی */
 @keyframes bump{ from{ transform:scale(1.08); } }
