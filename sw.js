@@ -1,6 +1,6 @@
 /* با هر انتشار، نام کش را همراه ?v= عوض کن تا نسخهٔ جدید جایگزین شود */
-const CACHE = "hobab-v0.9.5";
-const ASSETS = ["./", "./index.html", "./styles.css?v=0.9.5", "./app.js?v=0.9.5", "./manifest.json", "./icon.svg"];
+const CACHE = "hobab-v0.9.5.1";
+const ASSETS = ["./", "./index.html", "./styles.css?v=0.9.5.1", "./app.js?v=0.9.5.1", "./manifest.json", "./icon.svg"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
