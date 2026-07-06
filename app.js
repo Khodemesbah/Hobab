@@ -289,8 +289,8 @@ function applyLang(){
   $("appName").textContent = t("name");
   const verNum = APP_VERSION.replace("-pre", ""), pre = APP_VERSION.includes("-pre");
   $("verBadge").textContent = lang === "fa"
-    ? fieldNum(verNum) + (pre ? " پیش‌انتشار" : parseFloat(verNum) < 1 ? " بتا" : "")
-    : "v" + verNum + (pre ? " Pre" : parseFloat(verNum) < 1 ? " Beta" : "");
+    ? fieldNum(verNum) + (pre ? " پیش‌نمایش" : parseFloat(verNum) < 1 ? " بتا" : "")
+    : "v" + verNum + (pre ? " Preview" : parseFloat(verNum) < 1 ? " Beta" : "");
   $("offBadge").textContent = t("offline");
   $("fetchXau").title = $("fetchXag").title = t("titleFetch");
   $("themeBtn").title = t("titleTheme");
